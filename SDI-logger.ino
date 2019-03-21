@@ -1,6 +1,6 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-time stamp
 //Till Francke, 2019
-//ver 1.0
+//ver 1.1
 
 //Usage:
 //- install hardware required (see "Hardware required" and "Wiring")
@@ -58,27 +58,42 @@
 //for SD-card
 #define chipSelect 10  //pin used by SD-card slot. For the Snootlab-Shield, this is fixed to 10
 
+#define INTERVAL (30) //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define AWAKE_TIME 5 //time for being awake before and after actual measurement [sec].
+
+//start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
+#define HOUR_START 2   
+#define MINUTE_START 20
+#define SEC_START 0
+#define TIMESTAMP_START (HOUR_START*3600 + MINUTE_START*60 + SEC_START) //don't change this
+
+// Interrupt Pin used
+#define wakeUpPin 2
+
+
+// Begin code section - no user changes required below (sic!)
+
 //for SDI-12 sensor
 #include <SDI12.h>
 SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
 
-// Begin code section - no user changes required below (sic!)
 //error codes issued by RX-LED onboard the Arduino
-String errors[4] = { "", //short flashes every 2 secs
+/*String errors[4] = { "", //short flashes every 2 secs
                      "",
                      "no SD-card found",
                      "SD-card write error"
                       };
 
+*/
 
 //for SD-card
 #include <SPI.h>
 #include <SD.h>
 
 // clock
-#include <DS3231.h> // https://github.com/NorthernWidget/DS3231; delete any existing library
+#include <DS3231.h> // https://github.com/NorthernWidget/DS3231; delete any existing "DS3231"-library to avoid conflicts!!
 #include <Wire.h>
-//DS3231 Clock; //63 77
+//DS3231 Clock; 
 RTClib RTC;
 DateTime now;
 
@@ -86,7 +101,9 @@ DateTime now;
 #include <LowPower.h> // https://github.com/rocketscream/Low-Power V1.8
 
 String logfile_name="";
-char DateAndTimeString[22]; //19 digits plus the null char
+
+long timestamp_next=0; //timestamp of next reading 
+long timestamp_curr; //current timestamp
 
 void setup_sdi(){
   Serial.print(F("Init SDI-12 bus..."));
@@ -100,6 +117,7 @@ void setup_sdi(){
     digitalWrite(POWER_PIN, HIGH);
     delay(200);
   }
+  Serial.println(F("ok."));
 }
 
 void setup_sdcard()
@@ -121,14 +139,11 @@ void setup_sdcard()
 
 void setup_clock()
 {
-   // Initialize the rtc object
+  char DateAndTimeString[22]; //19 digits plus the null char
+  // Initialize the rtc object
   Serial.print(F("Init clock..."));
   // Start the I2C interface
   Wire.begin();
- 
-//  bool Century=false;
-//  bool h12;
-//  bool PM;
 
   now = RTC.now();
   sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
@@ -170,28 +185,28 @@ int count_values(String sdi_string) //return number of values in String by count
   byte tab_counter=0;
   for (int i=0; i< sdi_string.length(); i++)
     if (sdi_string[i]=='\t') tab_counter++;
- //Serial.println(F("tab_counter: ")+(String)tab_counter);
   return(tab_counter);
 }
   
 String takeMeasurement(char i){
   //Serial.print(F("reading from")+(String)i);
 
-  String command = "";
-  command += i;
-  command += "M!"; // SDI-12 measurement command format  [address]['M'][!]
-  mySDI12.sendCommand(command); //send command via SDI
+  String temp_str = "";  //generate command
+  temp_str += i;
+  temp_str += "M!"; // SDI-12 measurement command format  [address]['M'][!]
+  mySDI12.sendCommand(temp_str); //send command via SDI
   delay(30);
 
   // wait for acknowlegement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
-  String sdiResponse = "";
+  temp_str = "";
+  char c;
   delay(30);
   while (mySDI12.available())  // build response string
   {
-    char c = mySDI12.read();
+    c = mySDI12.read();
     if ((c != '\n') && (c != '\r'))
     {
-      sdiResponse += c;
+      temp_str += c;
       delay(5);
     }
   }
@@ -201,11 +216,11 @@ String takeMeasurement(char i){
 
   // find out how long we have to wait (in seconds).
   uint8_t wait = 0;
-  wait = sdiResponse.substring(1,4).toInt();
+  wait = temp_str.substring(1,4).toInt();
   //Serial.print(F("wait: ")+(String)wait); //print required time for measurement [s]
 
   // Set up the number of results to expect
-  int numMeasurements =  sdiResponse.substring(4,5).toInt();
+  uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
 
   unsigned long timerStart = millis();
   while((millis() - timerStart) < (1000 * wait)){
@@ -222,13 +237,13 @@ String takeMeasurement(char i){
 
   // iterate through all D-options until the expected number of values have been obtained
   String result="";
-  int dataOption=0; //number of "D-channel" to access/iterate
+  uint8_t dataOption=0; //number of "D-channel" to access/iterate
   while(dataOption < 10)
   {
-    command = "";
-    command += i;
-    command += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
-    mySDI12.sendCommand(command);
+    temp_str = "";
+    temp_str += i;
+    temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
+    mySDI12.sendCommand(temp_str);
   //  Serial.print(F("requested data "));
     while(!mySDI12.available()>1); // wait for acknowlegement
     delay(300); // let the data transfer
@@ -237,8 +252,6 @@ String takeMeasurement(char i){
     if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
     dataOption++; //read the next "D-channel" during the next loop
   }
-
-  
   mySDI12.clearBuffer();
   return(result);
 }
@@ -271,8 +284,14 @@ void blink_rx_led(int times, String msg) //write <times> blocks of char to seria
   }  
 }
 
-void error_message(int error_id) //keep blinking and issuing message
+void error_message(byte error_id) //keep blinking and issuing message
 {
+  String errors[4] = { "", //short flashes every 2 secs
+                     "",
+                     "no SD-card found",
+                     "SD-card write error"
+                      };
+
   while (1) 
   {
     Serial.println(errors[error_id]); 
@@ -281,39 +300,156 @@ void error_message(int error_id) //keep blinking and issuing message
   }  
 }
 
+long time_next_reading(long &timestamp_curr_i) //compute unix time of next reading
+{
+  timestamp_curr_i = RTC.now().unixtime();
+  //Serial.println((String)timestamp_curr_i);
+  long time2nextreading = INTERVAL - ( (timestamp_curr_i - (TIMESTAMP_START)) % INTERVAL);
+  return(timestamp_curr_i + time2nextreading);
+}
+
+
+// Those are the ALARM Bits that can be used
+#define ALRM1_MATCH_HR_MIN_SEC 0b1000  // when hours, minutes, and seconds match
+
+
+
+void reset_alarm_pin()
+{
+  DS3231 Clock; 
+  bool t=Clock.checkIfAlarm(1) & Clock.checkIfAlarm(2); //seems to be necessary to reset alarm pin status
+}
+
+
+void sleep_and_wait()  //idles away time until next reading by a) sleeping (saving energy) and b) waiting (showing signs of life)
+{
+   timestamp_next = time_next_reading(timestamp_curr); //set time of next reading and update timestamp (side effect)
+//  Serial.println(F("Next reading timestamp:")+(String)timestamp_next);
+//  Serial.println(F("Current timestamp:")+(String)timestamp_curr);
+
+  
+//  char DateAndTimeString[22]; //19 digits plus the null char
+ // sprintf(DateAndTimeString, "current time: %4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
+ // Serial.println(DateAndTimeString);
+  
+  long time2next = timestamp_next - timestamp_curr - AWAKE_TIME;  //compute time to spend in sleep mode
+  Serial.print(F("Time to sleep:"));
+  Serial.println((String)time2next);
+  //delay(time2next*1000); 
+  sleep(time2next);
+  
+  timestamp_curr = RTC.now().unixtime();
+  //Serial.print(F("Current timestamp:" ));
+  //Serial.println(timestamp_curr);
+
+  time2next = (timestamp_next - timestamp_curr);  //compute time to spend in wait mode
+  Serial.print(F("Time to wait:"));
+  Serial.println(time2next);
+  //delay(time2next*1000);
+  wait(time2next*1000);
+  
+}
+
 void wait(long interval) //wait for the requested number of millisec while still showing output/TX-activity at certain times
 {
   const int blink_interval = 2000; //blink TX/output every nn msecs. Should be a multiple of "interval"
   for(long i=interval; i >= 0; i -= blink_interval)
   {
-    Serial.print(F("next reading in "));
+    Serial.print(F("reading in "));
     Serial.println(String(i/1000) +" s"); 
     delay(blink_interval);
   } 
   
 }
 
+void sleep(long time2sleep)
+{
+  if (time2sleep < 1) return; //no short naps!
+  DS3231 Clock; 
+
+  // Set alarm
+  Serial.println(F("Setting alarm"));
+  reset_alarm_pin(); //otherwise, voltage stays high there
+
+  //compute time of next wake up
+  now = RTC.now(); //get current time
+  byte secs =now.second(); //extract components
+  byte mins =now.minute();
+  byte hours=now.hour();
+ Serial.print(F("current time:"));
+ Serial.println((String)hours+":"+(String)mins+":"+(String)secs);
+
+  long tstart = (long)hours*3600 + (long)mins * 60 + secs; //convert start time as timestamp
+  long tend = (long)hours*3600 + (long)mins * 60 + secs + time2sleep; //compute end time as timestamp
+
+//convert timestamp into time (day disregarded)
+secs = tend % 60;
+tend /= 60;              
+mins = tend % 60;
+tend /= 60;
+hours = tend % 24;
+
+  Serial.print(F("alarm to set:"));
+  Serial.println((String)hours+":"+(String)mins+":"+(String)secs);
+
+   // This is the interesting part which sets the AlarmBits and configures, when the Alarm be triggered
+  byte ALRM1_SET = ALRM1_MATCH_HR_MIN_SEC; // trigger A1 when hours, minute and second match
+
+  // combine the AlarmBits (only Alarm 1 used here)
+  int ALARM_BITS = 0;
+  ALARM_BITS <<= 4;
+  ALARM_BITS |= ALRM1_SET;
+  
+  // Trigger Alarm when Minute == 30 or 0
+  // Clock.setA1Time(Day, Hour, Minute, Second, AlarmBits, DayOfWeek, 12 hour mode, PM)
+  Clock.setA1Time(10, hours, mins, secs, ALARM_BITS, false, false, false);  //the day doesn't matter here
+ 
+  // Turn on Alarm
+  Clock.turnOnAlarm(1);
+  //Clock.turnOffAlarm(2);
+  
+  //Serial.println(ALARM_BITS,BIN);
+  //Serial.print(F("Status Alarm 1:")); Serial.println(Clock.checkAlarmEnabled(1));
+  //Serial.println(F("Status Alarm 2:")+(String)Clock.checkAlarmEnabled(2));
+  
+  // Attach interrupt
+  attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
+  // sleep
+  Serial.println(F("going 2 sleep"));
+  //digitalWrite(LED_BUILTIN, LOW);
+  delay(100);
+  LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);  //go to sleep
+
+}
+
+void wakeUp() {
+  detachInterrupt(0); 
+  digitalWrite(LED_BUILTIN, HIGH);
+   Serial.println(F("Woken"));
+  //Serial.println(F("resuming work"));
+  
+}
+
 void loop() { //this function is called repeatedly as long as the arduino is running
+  char DateAndTimeString[22]; //19 digits plus the null char
+  
+  timestamp_next = time_next_reading(timestamp_curr);
+
+  Serial.println(F("preparing sleep and wait..."));
+  sleep_and_wait(); 
   
   // make a string for assembling the data to log:
   String output_string = "";
   
 // assemble timestamp 
-  /*bool Century=false;
-  bool h12;
-  bool PM;
 
-  output_string = (String)Clock.getYear()+"-"+ (String)Clock.getMonth(Century)+"-"+ (String)Clock.getDate()+" "+ 
-              (String)Clock.getHour(h12, PM)+":"+ (String)Clock.getMinute()+":"+ (String)Clock.getSecond() + "\t";
-  */
   now = RTC.now();
   sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
   output_string = (String)DateAndTimeString;
   
   output_string += read_sensor(); //measure and read data from sensor
-    
-  
-  //Serial.println(F("string to log:")+(String)output_string); 
+   
+  //Serial.print(F("string to log:");Serial.println((String)output_string); 
   
   File dataFile = SD.open(logfile_name, FILE_WRITE);
 
@@ -326,7 +462,7 @@ void loop() { //this function is called repeatedly as long as the arduino is run
     Serial.println(output_string);
 
     // Wait for next sensor reading
-    wait (INTERVAL);   
+    //wait (INTERVAL);   
     //delay(INTERVAL);  //pause for "INTERVAL" msecs
   }
   // if the file isn't open, pop up an error:
