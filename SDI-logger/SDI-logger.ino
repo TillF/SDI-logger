@@ -1,6 +1,6 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-time stamp
 //Till Francke, 2019
-//ver 1.1
+//ver 1.12
 
 //Usage:
 //- install hardware required (see "Hardware required" and "Wiring")
@@ -47,7 +47,6 @@
 
 // Settings:
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port
-#define INTERVAL 8000 //interval between measurements [m sec]
 
 //for SDI-12 sensor
 #define DATA_PIN 7         // The pin of the SDI-12 data bus
@@ -174,12 +173,6 @@ void setup() { //this function is run once on power-up
   setup_sdi();
 }
 
-String read_sensor()
-{
-  String response = takeMeasurement(sdi_address); 
-  return(response);
-}
-
 int count_values(String sdi_string) //return number of values in String by counting separating Tabs
 {
   byte tab_counter=0;
@@ -194,9 +187,11 @@ String takeMeasurement(char i){
   String temp_str = "";  //generate command
   temp_str += i;
   temp_str += "M!"; // SDI-12 measurement command format  [address]['M'][!]
-  mySDI12.sendCommand(temp_str); //send command via SDI
+
+  mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
   delay(30);
 
+  
   // wait for acknowlegement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
   temp_str = "";
   char c;
@@ -213,6 +208,7 @@ String takeMeasurement(char i){
   mySDI12.clearBuffer();
 
   //Serial.println(F("response: ")+sdiResponse);
+ 
 
   // find out how long we have to wait (in seconds).
   uint8_t wait = 0;
@@ -254,6 +250,7 @@ String takeMeasurement(char i){
   }
   mySDI12.clearBuffer();
   return(result);
+  
 }
 
 String readSDIBuffer(){
@@ -412,22 +409,21 @@ hours = tend % 24;
   //Serial.print(F("Status Alarm 1:")); Serial.println(Clock.checkAlarmEnabled(1));
   //Serial.println(F("Status Alarm 2:")+(String)Clock.checkAlarmEnabled(2));
   
-  // Attach interrupt
-  attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
   // sleep
   Serial.println(F("going 2 sleep"));
-  //digitalWrite(LED_BUILTIN, LOW);
-  delay(100);
-  LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);  //go to sleep
+  Serial.flush();
 
+  //digitalWrite(LED_BUILTIN, LOW);
+  noInterrupts ();          // make sure we don't get interrupted before we sleep  
+  attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
+  interrupts ();           // interrupts allowed now, next instruction WILL be executed
+  LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);  //go to sleep
+  Serial.println(F("Woken")); 
+  Serial.flush();
 }
 
 void wakeUp() {
-  detachInterrupt(0); 
-  digitalWrite(LED_BUILTIN, HIGH);
-   Serial.println(F("Woken"));
-  //Serial.println(F("resuming work"));
-  
+  detachInterrupt(digitalPinToInterrupt(wakeUpPin)); //prevent multiple invocations of interrupt 
 }
 
 void loop() { //this function is called repeatedly as long as the arduino is running
@@ -447,23 +443,21 @@ void loop() { //this function is called repeatedly as long as the arduino is run
   sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
   output_string = (String)DateAndTimeString;
   
-  output_string += read_sensor(); //measure and read data from sensor
-   
+  //output_string += read_sensor(); //measure and read data from sensor /rr
+  output_string += takeMeasurement(sdi_address);    
   //Serial.print(F("string to log:");Serial.println((String)output_string); 
   
-  File dataFile = SD.open(logfile_name, FILE_WRITE);
+  //File dataFile = SD.open(logfile_name, FILE_WRITE);
 
   // if the file is available, write to it:
-  if (dataFile) {
-    dataFile.println(output_string);
-    dataFile.close();
+  //if (dataFile) 
+  if (1)
+  {
+    //dataFile.println(output_string);
+    //dataFile.close();
     // print to the serial port too:
     Serial.print(F("string logged:"));
     Serial.println(output_string);
-
-    // Wait for next sensor reading
-    //wait (INTERVAL);   
-    //delay(INTERVAL);  //pause for "INTERVAL" msecs
   }
   // if the file isn't open, pop up an error:
   else {
