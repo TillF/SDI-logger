@@ -1,6 +1,6 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-time stamp
 //Till Francke, 2019
-//ver 1.12
+//ver 1.14
 
 //Usage:
 //- install hardware required (see "Hardware required" and "Wiring")
@@ -57,8 +57,8 @@
 //for SD-card
 #define chipSelect 10  //pin used by SD-card slot. For the Snootlab-Shield, this is fixed to 10
 
-#define INTERVAL (30) //interval between measurements [sec]. Must result in an integer number of intervals per day.
-#define AWAKE_TIME 5 //time for being awake before and after actual measurement [sec].
+#define INTERVAL 15 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define AWAKE_TIME 3 //time for being awake before and after actual measurement [sec].
 
 //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 #define HOUR_START 2   
@@ -66,8 +66,9 @@
 #define SEC_START 0
 #define TIMESTAMP_START (HOUR_START*3600 + MINUTE_START*60 + SEC_START) //don't change this
 
-// Interrupt Pin used
-#define wakeUpPin 2
+
+#define wakeUpPin 2 // Interrupt Pin used (should be 2 on UNO) 
+#define messagePin 3 // (optional) pin for connecting LED indicating messages (don't use 0 or 1 when connected to USB)
 
 
 // Begin code section - no user changes required below (sic!)
@@ -79,8 +80,9 @@ SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
 //error codes issued by RX-LED onboard the Arduino
 /*String errors[4] = { "", //short flashes every 2 secs
                      "",
-                     "no SD-card found",
-                     "SD-card write error"
+                     "no SD-card found", //2
+                     "SD-card write error" //3
+                     "no data from sensor" //4
                       };
 
 */
@@ -128,7 +130,7 @@ void setup_sdcard()
   if (!SD.begin(chipSelect)) {
     
     Serial.println(F("Card failed, or not present"));
-    error_message(2);
+    error_message(2, -1);
     // don't do anything more
   }
    delay(100);
@@ -166,6 +168,11 @@ void setup() { //this function is run once on power-up
   Serial.begin(SERIAL_BAUD);
     while(!Serial);// wait for serial port to connect. Needed for native USB port only
 
+  if (messagePin !=0)  //initialize message LED, if present
+  {
+    pinMode(messagePin, OUTPUT);
+    digitalWrite(messagePin, LOW);
+  }  
   setup_clock();
  
   setup_sdcard();
@@ -180,6 +187,17 @@ int count_values(String sdi_string) //return number of values in String by count
     if (sdi_string[i]=='\t') tab_counter++;
   return(tab_counter);
 }
+
+String read_sensors()
+{
+ String output_string;
+ output_string += takeMeasurement(sdi_address);     // read SDI sensor
+ // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: only works with rinkydinks library, which in turn does not support alarms 
+ //if (output_string=="") //no data from sensor
+ //    error_message(4, 5); //blink LED 4 times, repeat 5 times
+ return(output_string);
+}
+ 
   
 String takeMeasurement(char i){
   //Serial.print(F("reading from")+(String)i);
@@ -270,30 +288,36 @@ String readSDIBuffer(){
  return(buffer);
 }
 
-void blink_rx_led(int times, String msg) //write <times> blocks of char to serial port using msg to let the RX led flash
+void blink_led(int times, String msg) //blink message LED, if exists
 {
+  Serial.println(msg);
+  if (messagePin==0) 
+    return; //no pin selected
   const long blink_length = 300; //duration of blinks and pauses
   for (int i=0;i < times; i++) 
   {
-    for (int j=0; j < (blink_length * (SERIAL_BAUD/8) /1000)/msg.length(); j++)
-        Serial.println(msg); 
+    digitalWrite(messagePin, HIGH); 
+    delay(blink_length);
+    digitalWrite(messagePin, LOW); 
     delay(blink_length);
   }  
 }
 
-void error_message(byte error_id) //keep blinking and issuing message
+void error_message(byte error_id, int8_t times) //blink and issue message for <time> times. For negative values, blink infinitely
 {
-  String errors[4] = { "", //short flashes every 2 secs
+  String errors[5] = { "", //short flashes every 2 secs
                      "",
-                     "no SD-card found",
-                     "SD-card write error"
+                     "no SD-card found",  //2
+                     "SD-card write error", //3
+                     "no data from sensor" //4
                       };
-
-  while (1) 
+  int8_t i;
+  while(1)
   {
-    Serial.println(errors[error_id]); 
-    blink_rx_led(error_id, errors[error_id] );
+    blink_led(error_id, errors[error_id] );
     delay(2000);
+    i = (i+1) % 120; //increment but prevent rollover to negative values
+    if (i== times) break;
   }  
 }
 
@@ -329,34 +353,48 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
  // sprintf(DateAndTimeString, "current time: %4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
  // Serial.println(DateAndTimeString);
   
-  long time2next = timestamp_next - timestamp_curr - AWAKE_TIME;  //compute time to spend in sleep mode
+  long time2next;
+
+  //wait before sleep
+  Serial.print(F("Time to wait1:"));
+  Serial.println(AWAKE_TIME);
+  wait(AWAKE_TIME*1000);
+  
+  //sleep
+  timestamp_curr = RTC.now().unixtime();
+  time2next = timestamp_next - timestamp_curr - AWAKE_TIME;  //compute time to spend in sleep mode
   Serial.print(F("Time to sleep:"));
   Serial.println((String)time2next);
   //delay(time2next*1000); 
   sleep(time2next);
   
+  //wait after sleep
   timestamp_curr = RTC.now().unixtime();
   //Serial.print(F("Current timestamp:" ));
   //Serial.println(timestamp_curr);
-
   time2next = (timestamp_next - timestamp_curr);  //compute time to spend in wait mode
-  Serial.print(F("Time to wait:"));
+  Serial.print(F("Time to wait2:"));
   Serial.println(time2next);
-  //delay(time2next*1000);
   wait(time2next*1000);
   
 }
 
-void wait(long interval) //wait for the requested number of millisec while still showing output/TX-activity at certain times
+void wait(long interval) //wait for the requested number of millisec while still showing output/LED-activity at certain times
 {
-  const int blink_interval = 2000; //blink TX/output every nn msecs. Should be a multiple of "interval"
+  const int blink_interval = 2000; //blink LED every nn msecs. Should be a multiple of "interval"
+  int led_state=HIGH;
+  
   for(long i=interval; i >= 0; i -= blink_interval)
   {
     Serial.print(F("reading in "));
     Serial.println(String(i/1000) +" s"); 
+    if (messagePin !=0)
+    {
+      digitalWrite(messagePin, led_state);
+      led_state=!led_state;  //invert LED-state
+    } 
     delay(blink_interval);
-  } 
-  
+  }
 }
 
 void sleep(long time2sleep)
@@ -411,9 +449,10 @@ hours = tend % 24;
   
   // sleep
   Serial.println(F("going 2 sleep"));
+  digitalWrite(messagePin, 0);
+  delay(500);
   Serial.flush();
 
-  //digitalWrite(LED_BUILTIN, LOW);
   noInterrupts ();          // make sure we don't get interrupted before we sleep  
   attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
   interrupts ();           // interrupts allowed now, next instruction WILL be executed
@@ -424,15 +463,11 @@ hours = tend % 24;
 
 void wakeUp() {
   detachInterrupt(digitalPinToInterrupt(wakeUpPin)); //prevent multiple invocations of interrupt 
+  digitalWrite(messagePin, 1);
 }
 
 void loop() { //this function is called repeatedly as long as the arduino is running
   char DateAndTimeString[22]; //19 digits plus the null char
-  
-  timestamp_next = time_next_reading(timestamp_curr);
-
-  Serial.println(F("preparing sleep and wait..."));
-  sleep_and_wait(); 
   
   // make a string for assembling the data to log:
   String output_string = "";
@@ -443,18 +478,17 @@ void loop() { //this function is called repeatedly as long as the arduino is run
   sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
   output_string = (String)DateAndTimeString;
   
-  //output_string += read_sensor(); //measure and read data from sensor /rr
-  output_string += takeMeasurement(sdi_address);    
+  output_string += read_sensors(); //measure and read data from sensor /rr
+  
   //Serial.print(F("string to log:");Serial.println((String)output_string); 
   
-  //File dataFile = SD.open(logfile_name, FILE_WRITE);
+  File dataFile = SD.open(logfile_name, FILE_WRITE);
 
   // if the file is available, write to it:
-  //if (dataFile) 
-  if (1)
+  if (dataFile) 
   {
-    //dataFile.println(output_string);
-    //dataFile.close();
+    dataFile.println(output_string);
+    dataFile.close();
     // print to the serial port too:
     Serial.print(F("string logged:"));
     Serial.println(output_string);
@@ -463,7 +497,11 @@ void loop() { //this function is called repeatedly as long as the arduino is run
   else {
     Serial.print(F("error opening "));
     Serial.println(logfile_name);
-    error_message(3); //blink LED 3 times
+    error_message(3, -1); //blink LED 3 times
   }
+    timestamp_next = time_next_reading(timestamp_curr);
+
+  Serial.println(F("preparing sleep and wait..."));
+  sleep_and_wait(); 
   
 }
