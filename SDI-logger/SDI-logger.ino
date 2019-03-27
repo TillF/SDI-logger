@@ -1,12 +1,13 @@
-//Data logger for logging SDI-sensor data to SD-card with RTC-time stamp
+//Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.14
+//ver 1.15
 
 //Usage:
 //- install hardware required (see "Hardware required" and "Wiring")
 //- install libraries (see "Software required")
 //- verify/set clock using separate script (e.g. set_clock.ino)
-//- adjust settings (see "Settings"
+//- verify/set logger-id using separate script (e.g. set_id.ino)
+//- adjust settings (see section "Settings" below)
 
 //Hardware required:
 //D3231 real time clock, SD-card slot (or both combined in Shield, e.g. https://snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html)
@@ -94,12 +95,14 @@ SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
 // clock
 #include <DS3231.h> // https://github.com/NorthernWidget/DS3231; delete any existing "DS3231"-library to avoid conflicts!!
 #include <Wire.h>
-//DS3231 Clock; 
 RTClib RTC;
 DateTime now;
 
 //sleep mode
 #include <LowPower.h> // https://github.com/rocketscream/Low-Power V1.8
+
+//for reading logger ID from EEPROM
+#include <EEPROM.h>
 
 String logfile_name="";
 
@@ -158,7 +161,16 @@ void setup_clock()
 
   //assemble name of logfile to be created
   sprintf(DateAndTimeString, "%4d%02d%02d", now.year(), now.month(),now.day()); 
-  logfile_name = (String)DateAndTimeString + ".log";
+  logfile_name = (String)DateAndTimeString+".";
+  
+  //set file extension from logger ID read from EEPROM
+  char logger_id[3] = "L01";  //Variable to store in EEPROM.
+  int eeAddress = 0;   //Location we want the data to be put.
+  EEPROM.get(eeAddress, logger_id);
+  if ( (logger_id[0] < '0') | (logger_id[0] > 'z')) //this doesn't seem to be a proper string
+    logfile_name += "log"; else //revert to default
+    logfile_name += (String)logger_id;
+    
   Serial.print(F("logfile:"));
   Serial.println(logfile_name); 
 }
