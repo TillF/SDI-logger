@@ -1,50 +1,9 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.15
+//ver 1.17
 
-//Usage:
-//- install hardware required (see "Hardware required" and "Wiring")
-//- install libraries (see "Software required")
-//- verify/set clock using separate script (e.g. set_clock.ino)
-//- verify/set logger-id using separate script (e.g. set_id.ino)
-//- adjust settings (see section "Settings" below)
+//see instructions at https://github.com/TillF/SDI-logger
 
-//Hardware required:
-//D3231 real time clock, SD-card slot (or both combined in Shield, e.g. https://snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html)
-//for wiring details, see below
-
-//Software required:
-//Please install additional libraries via "Tools" -> "Manage Libraries" or download and extract libraries to c:\Program Files (x86)\Arduino\libraries\
-// SDI: The library is available at: https://github.com/EnviroDIY/Arduino-SDI-12
-// RTC: DS3231 https://github.com/NorthernWidget/DS3231; delete any existing library
-// sleep mode: https://github.com/rocketscream/Low-Power V1.8
-
-//Wiring
-//RTC (no wiring required when using Shield, except for SWQ (between battery and SD-card slot))
-// SD-card-pin ->  Arduino-pin
-// Vin -> 5 V
-// GND -> GND
-// SCL -> Analog 5
-// SDA -> Analog 4
-// SQW -> pin (default: 2)  (green)
-
-// SD card (no wiring required when using Shield):
-// SD-card-pin ->  Arduino-pin
-// ** MOSI -> pin D11
-// ** MISO -> pin D12
-// ** CLK (or SLK) -> pin D13
-// ** CS -> pin (default: D10 )
-
-//SDI-12:
-//  You should not have more than one SDI-12 device attached for this example.
-// https://raw.github.com/Kevin-M-Smith/SDI-12-Circuit-Diagrams/master/basic_setup_no_usb.png
-// SD-card-pin ->  Arduino-pin 
-// GND -> GND
-// +Vbat -> 5 V (if the external device needs more than 5 V, connect it to external battery instead of arduino)
-// SDI-12 Data -> pin (default: D7) 
-// Truebner SMC: data: green; ground: white; V+: brown
-// delta_T PR2: data: black; ground: blue; V+: white (needs external 12 V)
- 
 
 // Settings:
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port
@@ -78,15 +37,6 @@
 #include <SDI12.h>
 SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
 
-//error codes issued by RX-LED onboard the Arduino
-/*String errors[4] = { "", //short flashes every 2 secs
-                     "",
-                     "no SD-card found", //2
-                     "SD-card write error" //3
-                     "no data from sensor" //4
-                      };
-
-*/
 
 //for SD-card
 #include <SPI.h>
@@ -127,18 +77,15 @@ void setup_sdi(){
 void setup_sdcard()
 {
   Serial.print(F("Init SD card..."));
-  delay(500);
-
+  
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
-    
     Serial.println(F("Card failed, or not present"));
     error_message(2, -1);
-    // don't do anything more
   }
-   delay(100);
+   
    Serial.println(F("ok."));
-  
+  Serial.flush();
 }
 
 void setup_clock()
@@ -205,11 +152,40 @@ String read_sensors()
  String output_string;
  output_string += takeMeasurement(sdi_address);     // read SDI sensor
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: only works with rinkydinks library, which in turn does not support alarms 
+  output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
  //if (output_string=="") //no data from sensor
  //    error_message(4, 5); //blink LED 4 times, repeat 5 times
  return(output_string);
 }
+
+ int getVoltage(void) // Returns actual value of Vcc (x 100), i.e. internal voltage to processor (http://forum.arduino.cc/index.php?topic=88935.0)
+    {
+       
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+     // For mega boards
+     const long InternalReferenceVoltage = 1115L;  // Adjust this value to your boards specific internal BG voltage x1000
+        // REFS1 REFS0          --> 0 1, AVcc internal ref. -Selects AVcc reference
+        // MUX4 MUX3 MUX2 MUX1 MUX0  --> 11110 1.1V (VBG)         -Selects channel 30, bandgap voltage, to measure
+     ADMUX = (0<<REFS1) | (1<<REFS0) | (0<<ADLAR)| (0<<MUX5) | (1<<MUX4) | (1<<MUX3) | (1<<MUX2) | (1<<MUX1) | (0<<MUX0);
  
+#else
+     // For 168/328 boards
+     const long InternalReferenceVoltage = 1056L;  // Adjust this value to your boards specific internal BG voltage x1000
+        // REFS1 REFS0          --> 0 1, AVcc internal ref. -Selects AVcc external reference
+        // MUX3 MUX2 MUX1 MUX0  --> 1110 1.1V (VBG)         -Selects channel 14, bandgap voltage, to measure
+     ADMUX = (0<<REFS1) | (1<<REFS0) | (0<<ADLAR) | (1<<MUX3) | (1<<MUX2) | (1<<MUX1) | (0<<MUX0);
+       
+#endif
+     delay(50);  // Let mux settle a little to get a more stable A/D conversion
+        // Start a conversion 
+     ADCSRA |= _BV( ADSC );
+        // Wait for it to complete
+     while( ( (ADCSRA & (1<<ADSC)) != 0 ) );
+        // Scale the value
+     int results = (((InternalReferenceVoltage * 1023L) / ADC) + 5L) / 10L; // calculates for straight line value
+     return results;
+
+    }
   
 String takeMeasurement(char i){
   //Serial.print(F("reading from")+(String)i);
