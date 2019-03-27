@@ -1,34 +1,33 @@
 # SDI-logger
 Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time stamp.
 
-** Features
+## Features
 - requires low-cost datahardware (starting from 15 € [2019], excluding power supply, SD-card and casing)
 - data loggin to SD-card
 - use of low-drift clock (D3231)
 - optional sleep mode to save power
-- optional support of message LED for indiging multiple loggers
-
-cating logger status
-- optional assignment of unique logger-ID for mana
-** Usage
+- optional support of message LED for indicating logger status
+- optional assignment of unique logger-ID for managing multiple loggers
+## Usage
 - install hardware required (see "Hardware required" and "Wiring")
 - install libraries (see "Software required")
 - verify/set clock using separate script (e.g. set_clock.ino)
 - verify/set logger-id using separate script (e.g. set_id.ino)
 - adjust settings (see section "Settings" below)
 
-** Hardware required
+## Hardware required
 - tested with Arduino Uno, rev. 3
 - D3231 real time clock, SD-card slot (or both combined in Shield, e.g. https:snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html)
 for wiring details, see below
 
-** Software required:
+## Software required:
 Please install additional libraries via "Tools" -> "Manage Libraries" or download and extract libraries to c:\Program Files (x86)\Arduino\libraries\
  SDI: The library is available at: https://github.com/EnviroDIY/Arduino-SDI-12
  RTC: DS3231 https:github.com/NorthernWidget/DS3231; delete any existing library
  sleep mode: https:github.com/rocketscream/Low-Power V1.8
 
-** Wiring
+## Wiring
+
 RTC (no wiring required when using Shield, except for SWQ (between battery and SD-card slot))
  SD-card-pin ->  Arduino-pin
  Vin -> 5 V
@@ -37,7 +36,8 @@ RTC (no wiring required when using Shield, except for SWQ (between battery and S
  SDA -> Analog 4
  SQW -> pin (default: 2)  (optional, required only when using sleep mode)
 
- SD card (no wiring required when using Shield):
+
+SD card (no wiring required when using Shield):
  SD-card-pin ->  Arduino-pin
  MOSI -> pin D11
  MISO -> pin D12
