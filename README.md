@@ -3,8 +3,9 @@ Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time s
 
 ## Features
 - requires low-cost datahardware (starting from 15 € [2019], excluding power supply, SD-card and casing)
-- data loggin to SD-card
+- data logging to SD-card
 - use of low-drift clock (D3231)
+- supports reading of multiple SDI-sensors
 - optional sleep mode to save power
 - optional support of message LED for indicating logger status
 - optional assignment of unique logger-ID for managing multiple loggers
@@ -29,7 +30,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
  SDI: https://github.com/EnviroDIY/Arduino-SDI-12 (tested: 29 Oct 2018)
  
- RTC: https://github.com/NorthernWidget/DS3231 (tested 31 Oct 2018) delete/rename any existing library to avoid conflicts
+ RTC: https://github.com/NorthernWidget/DS3231 (tested: 31 Oct 2018) delete/rename any existing library to avoid conflicts
  
  sleep mode: https://github.com/rocketscream/Low-Power (tested: V1.8)
 

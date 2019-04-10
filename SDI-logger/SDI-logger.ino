@@ -1,38 +1,38 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.18
+//ver 1.19
 
 //see instructions at https://github.com/TillF/SDI-logger
 
 
-// Settings:
-#define SERIAL_BAUD 9600  // The baud rate for the output serial port
+// Begin settings -------------------------------------------------
+#define SERIAL_BAUD 9600  // The baud rate for the output serial port (only relevant when conected to computer)
 
 //for SDI-12 sensor
 #define DATA_PIN 7         // The pin of the SDI-12 data bus
-#define POWER_PIN -1       // The sensor power pin (or -1 if not switching power)
-//#define sdi_address '3'; //SDI-address of attached sensor (Truebner)
-#define sdi_address '1' //SDI-address of attached sensor (PR2/6 SDI)
-
+#define POWER_PIN -1       // The sensor power pin (or -1, if not switching power)
+const char sdi_addresses[] = { '1'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
+  
 //for SD-card
 #define chipSelect 10  //pin used by SD-card slot. For the Snootlab-Shield, this is fixed to 10
 
+//further pins
+#define wakeUpPin 2 // Interrupt Pin used (should be 2 on UNO) 
+#define messagePin 3 // (optional) pin for connecting LED indicating messages (don't use 0 or 1 when connected to USB)
+
+//time settings
 #define INTERVAL 15 //interval between measurements [sec]. Must result in an integer number of intervals per day.
 #define AWAKE_TIME 3 //time for being awake before and after actual measurement [sec].
 
-//start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
+  //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 #define HOUR_START 2   
 #define MINUTE_START 20
 #define SEC_START 0
 #define TIMESTAMP_START (HOUR_START*3600 + MINUTE_START*60 + SEC_START) //don't change this
 
-
-#define wakeUpPin 2 // Interrupt Pin used (should be 2 on UNO) 
-#define messagePin 3 // (optional) pin for connecting LED indicating messages (don't use 0 or 1 when connected to USB)
-
+// end settings --------------------------------------------------------
 
 // Begin code section - no user changes required below (sic!)
-
 //for SDI-12 sensor
 #include <SDI12.h>
 SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
@@ -76,28 +76,34 @@ void setup_sdi(){
   File dataFile = SD.open(logfile_name, FILE_WRITE);
   if (!dataFile) 
      error_message(3, -1); //blink LED 3 times
-  
-  String temp_str = "";  //generate command
-  temp_str += sdi_address;
-  temp_str += "I!"; // SDI-12 identification command format  [address]['I'][!]
-  mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
-  delay(30);
-
-  temp_str = "";
-  char c;
-  delay(30);
-  while (mySDI12.available())  // build response string
+  dataFile.print("#"); //open first line
+  //get IDs of all requested SDI-sensors
+  for (byte i=0; i < strlen(sdi_addresses); i++)
   {
-    c = mySDI12.read();
-    if ((c != '\n') && (c != '\r'))
+    String temp_str = "";  //generate command
+    temp_str += sdi_addresses[i];
+    temp_str += "I!"; // SDI-12 identification command format  [address]['I'][!]
+    mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
+    delay(30);
+    //Serial.println(temp_str);
+    
+    temp_str = "";
+    char c;
+    delay(30);
+    while (mySDI12.available())  // build response string
     {
-      temp_str += c;
-      delay(5);
+      c = mySDI12.read();
+      if ((c != '\n') && (c != '\r'))
+      {
+        temp_str += c;
+        delay(5);
+      }
     }
+    mySDI12.clearBuffer();
+       
+    dataFile.print(temp_str + ";");
   }
-  mySDI12.clearBuffer();
-     
-  dataFile.println((String)"# " + temp_str);
+  dataFile.println("");
   dataFile.close();
   Serial.println(F("ok."));
 }
@@ -178,11 +184,15 @@ int count_values(String sdi_string) //return number of values in String by count
 String read_sensors()
 {
  String output_string;
- output_string += takeMeasurement(sdi_address);     // read SDI sensor
- // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: only works with rinkydinks library, which in turn does not support alarms 
+ for (byte i=0; i < strlen(sdi_addresses); i++)
+  {
+     if (i > 0) output_string += "\t"; //add field separator
+     output_string += takeMeasurement(sdi_addresses[i]);     // read SDI sensor
+  }   
+ // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
   output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
  //if (output_string=="") //no data from sensor
- //    error_message(4, 5); //blink LED 4 times, repeat 5 times
+ //    error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
  return(output_string);
 }
 
@@ -224,7 +234,7 @@ String takeMeasurement(char i){
 
   mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
   delay(30);
-
+  //Serial.println(temp_str); //rr
   
   // wait for acknowlegement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
   temp_str = "";
@@ -473,7 +483,7 @@ hours = tend % 24;
   attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
   interrupts ();           // interrupts allowed now, next instruction WILL be executed
   LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);  //go to sleep
-  Serial.println(F("Woken")); 
+  //Serial.println(F("Woken")); 
   Serial.flush();
 }
 
