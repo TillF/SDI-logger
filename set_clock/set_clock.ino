@@ -1,7 +1,7 @@
 /*
 Set time of D3231 RTC
 needs library
-DS3231 // https://github.com/NorthernWidget/DS3231; delete any existing library
+DS3231 // https://github.com/NorthernWidget/DS3231; delete/rename any other existing library to avoid conflicts
 */
 
 #include <DS3231.h>
@@ -94,6 +94,7 @@ void loop() {
 		Clock.setClockMode(false);	// set to 24h
 		//setClockMode(true);	// set to 12h
 
+    Serial.println("Components read:");
     Serial.println(Year);
     Serial.println(Month);
     Serial.println(Date);
@@ -112,7 +113,11 @@ void loop() {
 
     Serial.println((String)"Current RTC-time: " + (String)Clock.getYear()+"-"+ (String)Clock.getMonth(Century)+"-"+ (String)Clock.getDate()+" "+ 
               (String)Clock.getHour(h12, PM)+":"+ (String)Clock.getMinute()+":"+ (String)Clock.getSecond());
- 
+
+    Serial.println("Repeat if required.");
+    Serial.println("If this yields no changes or implausible values, please check the wiring to the RTC.");
+    
+    
 	}
 	delay(1000);
 }
