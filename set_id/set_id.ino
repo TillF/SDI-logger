@@ -1,10 +1,11 @@
 /***
-Set varaible in EEPROM (permanent) used as Logger-ID by SDI-logger)
+to be run once:
+Write a variable to EEPROM (permanent) used as Logger-ID by SDI-logger.ino)
 ***/
 
 #include <EEPROM.h>
 
-  char logger_id[3] = "L01";  //Variable to store in EEPROM.
+  char logger_id[3] = "";  //Variable to store in EEPROM.
   int eeAddress = 0;   //Location we want the data to be put.
 
 
@@ -16,7 +17,7 @@ void setup() {
   }
 
   EEPROM.get(eeAddress, logger_id);
-  Serial.println("current ID:"+(String)logger_id);
+  Serial.println("current ID: "+(String)logger_id);
 
   Serial.println("Set Serial Monitor window to \"newline\" in the dropdown at the bottom!");
   Serial.println("Enter new logger-ID (3 characters, terminated with \"x\"), e.g. \"L01x\" (without the quotes)");
@@ -39,13 +40,14 @@ void loop() {
     while (j<5) {
       if (Serial.available()) {
         InChar = Serial.read();
-        if (InChar == 'x')
+        if (InChar == 'x' || InChar == '\n')
           break;
         else
         InString[j] = InChar;
         j += 1;
       }
     }
+   InString[j] = '\0';
    
     delay(100); //wait for buffer
     while (Serial.available())  //clear remaining buffer
