@@ -11,9 +11,9 @@ Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time s
 ## Usage
 - install hardware required (see "Hardware required" and "Wiring")
 - install libraries (see "Software required")
-- verify/set clock using separate script (e.g. set_clock.ino)
-- verify/set logger-id using separate script (e.g. set_id.ino)
-- adjust settings (see section "Settings" below)
+- verify/set clock using separate script (e.g. ```set_clock.ino```)
+- verify/set logger-id using separate script (e.g. ```set_id.ino```)
+- adjust settings (see section "Settings" in ```SDI-logger.ino```)
 
 ## Hardware required
 - tested with Arduino Uno, rev. 3
@@ -29,7 +29,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
 ## Wiring
 
-### RTC (no wiring required when using Shield, except for SWQ (between battery and SD-card slot))
+### RTC (when using Shield, only SWQ (between battery and SD-card slot) required)
 
  SD-card-pin ->  Arduino-pin
  
@@ -57,7 +57,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  CS -> pin (default: D10 )
  
 
-### SDI-12 (Only one SDI-12 device supported)
+### SDI-12 (only one SDI-12 device supported)
 
  SDI-device ->  Arduino-pin 
  

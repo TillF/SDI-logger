@@ -39,6 +39,7 @@ void GetDateStuff(byte& Year, byte& Month, byte& Day,// byte& DoW,
 			j += 1;
 			if (InChar == 'x') {
 				GotString = true;
+       InString[j] = '\0';
 			}
 		}
 	}
