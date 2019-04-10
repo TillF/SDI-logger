@@ -8,6 +8,9 @@ Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time s
 - optional sleep mode to save power
 - optional support of message LED for indicating logger status
 - optional assignment of unique logger-ID for managing multiple loggers
+- optional logging of (pseudo-)voltage at controler for brownout-detection
+
+
 ## Usage
 - install hardware required (see "Hardware required" and "Wiring")
 - install libraries (see "Software required")
@@ -23,9 +26,12 @@ for wiring details, see below
 
 ## Software required:
 Please install additional libraries via "Tools" -> "Manage Libraries" or download and extract libraries to c:\Program Files (x86)\Arduino\libraries\
- SDI: The library is available at: https://github.com/EnviroDIY/Arduino-SDI-12
- RTC: DS3231 https:github.com/NorthernWidget/DS3231; delete any existing library
- sleep mode: https:github.com/rocketscream/Low-Power V1.8
+
+ SDI: https://github.com/EnviroDIY/Arduino-SDI-12 (tested: 29 Oct 2018)
+ 
+ RTC: https://github.com/NorthernWidget/DS3231 (tested 31 Oct 2018) delete/rename any existing library to avoid conflicts
+ 
+ sleep mode: https://github.com/rocketscream/Low-Power (tested: V1.8)
 
 ## Wiring
 

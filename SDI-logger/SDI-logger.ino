@@ -1,6 +1,6 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.17
+//ver 1.18
 
 //see instructions at https://github.com/TillF/SDI-logger
 
@@ -71,6 +71,34 @@ void setup_sdi(){
     digitalWrite(POWER_PIN, HIGH);
     delay(200);
   }
+
+  //write sensor ID to top of output file
+  File dataFile = SD.open(logfile_name, FILE_WRITE);
+  if (!dataFile) 
+     error_message(3, -1); //blink LED 3 times
+  
+  String temp_str = "";  //generate command
+  temp_str += sdi_address;
+  temp_str += "I!"; // SDI-12 identification command format  [address]['I'][!]
+  mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
+  delay(30);
+
+  temp_str = "";
+  char c;
+  delay(30);
+  while (mySDI12.available())  // build response string
+  {
+    c = mySDI12.read();
+    if ((c != '\n') && (c != '\r'))
+    {
+      temp_str += c;
+      delay(5);
+    }
+  }
+  mySDI12.clearBuffer();
+     
+  dataFile.println((String)"# " + temp_str);
+  dataFile.close();
   Serial.println(F("ok."));
 }
 
@@ -483,8 +511,8 @@ void loop() { //this function is called repeatedly as long as the arduino is run
   }
   // if the file isn't open, pop up an error:
   else {
-    Serial.print(F("error opening "));
-    Serial.println(logfile_name);
+    //Serial.print(F("error opening "));
+    //Serial.println(logfile_name);
     error_message(3, -1); //blink LED 3 times
   }
     timestamp_next = time_next_reading(timestamp_curr);
