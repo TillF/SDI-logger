@@ -1,6 +1,6 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.20
+//ver 1.21
 
 //see instructions at https://github.com/TillF/SDI-logger
 
@@ -17,8 +17,8 @@
 #define messagePin 3 // (optional) pin for connecting LED indicating messages (UNO: don't use 0 or 1 when connected to USB; Pro Micro: 17)
 
 //time settings
-#define INTERVAL 15 //interval between measurements [sec]. Must result in an integer number of intervals per day.
-#define AWAKE_TIME 15 //time for being awake before and after actual measurement [sec].
+#define INTERVAL 60 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define AWAKE_TIME 5 //time for being awake before and after actual measurement [sec].
 
   //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 #define HOUR_START 2   
@@ -111,6 +111,12 @@ void setup() { //this function is run once on power-up
     pinMode(messagePin, OUTPUT);
     digitalWrite(messagePin, LOW);
   }  
+
+  if (wakeUpPin !=0)  //wakeUpPin pin, if present
+  {
+    pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
+  }  
+
   setup_clock();
   setup_sdcard();
   setup_sdi();
@@ -278,7 +284,7 @@ void sleep(long time2sleep)
   DS3231 Clock; 
 
   // Set alarm
-  Serial.println(F("Setting alarm"));
+  //Serial.println(F("Setting alarm"));
   reset_alarm_pin(); //otherwise, voltage stays high there
 
   //compute time of next wake up
