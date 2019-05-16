@@ -48,7 +48,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  
  SDA -> Analog 4
  
- SQW -> pin (default: 2)  (optional, required only when using sleep mode)
+ SQW -> pin (default: 2 on Uno, 7 on Pro Micro)  (optional, required only when using sleep mode)
 
 
 ### SD card (no wiring required when using Shield)
@@ -98,3 +98,15 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 An Arduino Uno equipped with a Snootlab Shield. Pin D2 has been connected to a wire soldered to SQW on the shield. The blue LED of the shield in the lower right (actually a power LED) has been re-configured to serve as the message LED: The left side of the adjacent resistor was soldered off the shield and instead connected to the wire leading to D3. 
 
 Both wires still use the connector plugs, but could likewise also be soldered directly to the contact line on the shield.
+
+## FAQs
+### Arduino gets stuck after message "going 2 sleep"
+- Unfortunately, sleep mode is still experimental and buggy. Disable it by setting AWAKE_TIME to a value greater than INTERVAL to disable sleeping.
+
+### Message "SD-card write error"
+Appears erratically. Try:
+- restart Arduino
+
+- remove and reinsert SD-card, then restart Arduino
+
+- format SD-card 
