@@ -114,6 +114,7 @@ void setup() { //this function is run once on power-up
   setup_clock();
   setup_sdcard();
   setup_sdi();
+  setup_imu();
 }
 
 
@@ -121,6 +122,7 @@ String read_sensors()
 {
  String output_string;
  //output_string += read_all_SDI();
+ output_string += read_imu();
   
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
   output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
