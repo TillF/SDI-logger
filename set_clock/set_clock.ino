@@ -72,21 +72,55 @@ void GetDateStuff(byte& Year, byte& Month, byte& Day,// byte& DoW,
 	Second = Temp1*10 + Temp2;
 }
 
+
+
+int serial_putchar(char c, FILE* f) {
+    if (c == '\n') serial_putchar('\r', f);
+    return Serial.write(c) == 1? 0 : 1;
+}
+
 void setup() {
 	// Start the serial port
 	Serial.begin(9600);
-
+    while(!Serial);// wait for serial port to connect. Needed for native USB port only
+  Serial.println("Initialize RTC...");
+ 
+  
 	// Start the I2C interface
 	Wire.begin();
-  Serial.println((String)"Current RTC-time: " + (String)Clock.getYear()+"-"+ (String)Clock.getMonth(Century)+"-"+ (String)Clock.getDate()+" "+ 
-              (String)Clock.getHour(h12, PM)+":"+ (String)Clock.getMinute()+":"+ (String)Clock.getSecond());
+  Serial.println("OK");
+ Serial.flush();
+delay(1000);
+
+
+// Set up printf to directly print to SDout
+FILE serial_stdout;
+fdev_setup_stream(&serial_stdout, serial_putchar, NULL, _FDEV_SETUP_WRITE);
+stdout = &serial_stdout;
+
+  Serial.print((String)"Current RTC-time: "); 
+  printf("%02d-", Clock.getYear());
+  printf("%02d-", Clock.getMonth(Century));
+  printf("%02d ", Clock.getDate());
+  printf("%02d:", Clock.getHour(h12, PM));
+  printf("%02d:", Clock.getMinute() );
+  printf("%02d\n", Clock.getSecond());
+
+  
+  //dtostrf(Clock.getYear(),2,0)
+  //Serial.println((String)"Current RTC-time: " + Clock.getYear()+"-"+ (String)Clock.getMonth(Century)+"-"+ (String)Clock.getDate()+" "+ 
+ //             (String)Clock.getHour(h12, PM)+":"+ (String)Clock.getMinute()+":"+ (String)Clock.getSecond());
 
   Serial.println("Set Serial Monitor window to \"newline\" in the dropdown at the bottom!");
   Serial.println("Enter new time in the format YYMMDDHHMMSS, with an \'x\' at the end.");
+ Serial.flush();
+delay(1000);
+
 
 }
 
 void loop() {
+
 	// If something is coming in on the serial line, it's
 	// a time correction so set the clock accordingly.
 	if (Serial.available()) {
@@ -103,7 +137,7 @@ void loop() {
     Serial.println(Minute);
     Serial.println(Second);
 
-
+//set the clock to extracted values
 		Clock.setYear(Year);
 		Clock.setMonth(Month);
 		Clock.setDate(Date);
@@ -112,8 +146,13 @@ void loop() {
 		Clock.setMinute(Minute);
 		Clock.setSecond(Second);
 
-    Serial.println((String)"Current RTC-time: " + (String)Clock.getYear()+"-"+ (String)Clock.getMonth(Century)+"-"+ (String)Clock.getDate()+" "+ 
-              (String)Clock.getHour(h12, PM)+":"+ (String)Clock.getMinute()+":"+ (String)Clock.getSecond());
+  Serial.print((String)"Current RTC-time: "); 
+  printf("%02d-", Clock.getYear());
+  printf("%02d-", Clock.getMonth(Century));
+  printf("%02d ", Clock.getDate());
+  printf("%02d:", Clock.getHour(h12, PM));
+  printf("%02d:", Clock.getMinute() );
+  printf("%02d\n", Clock.getSecond());
 
     Serial.println("Repeat if required.");
     Serial.println("If this yields no changes or implausible values, please check the wiring to the RTC.");
