@@ -1,5 +1,5 @@
 //initialize and use MPU9250 (gyro-magnetic-temperature sensor)
-// needs library https://github.com/sparkfun/MPU-9250_Breakout
+// needs library https://github.com/sparkfun/SparkFun_MPU-9250_Breakout_Arduino_Library/
 //wiring: I2C:
 // Gyro -> UNO:
 //Vin -> 5V or 3.3V (red)
