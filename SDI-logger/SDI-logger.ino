@@ -1,6 +1,6 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.20
+//ver 1.22
 
 //see instructions at https://github.com/TillF/SDI-logger
 
@@ -17,8 +17,8 @@
 #define messagePin 3 // (optional) pin for connecting LED indicating messages (UNO: don't use 0 or 1 when connected to USB; Pro Micro: 17)
 
 //time settings
-#define INTERVAL 15 //interval between measurements [sec]. Must result in an integer number of intervals per day.
-#define AWAKE_TIME 15 //time for being awake before and after actual measurement [sec].
+#define INTERVAL 60*20 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define AWAKE_TIME 5 //time for being awake before and after actual measurement [sec].
 
   //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 #define HOUR_START 2   
@@ -111,6 +111,12 @@ void setup() { //this function is run once on power-up
     pinMode(messagePin, OUTPUT);
     digitalWrite(messagePin, LOW);
   }  
+
+  if (wakeUpPin !=0)  //wakeUpPin pin, if present
+  {
+    pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
+  }  
+
   setup_clock();
   setup_sdcard();
   setup_sdi();
@@ -278,7 +284,7 @@ void sleep(long time2sleep)
   DS3231 Clock; 
 
   // Set alarm
-  Serial.println(F("Setting alarm"));
+  //Serial.println(F("Setting alarm"));
   reset_alarm_pin(); //otherwise, voltage stays high there
 
   //compute time of next wake up
@@ -310,6 +316,8 @@ hours = tend % 24;
   ALARM_BITS <<= 4;
   ALARM_BITS |= ALRM1_SET;
   
+  //Serial.print(F("Status Alarm 1:")); Serial.println(Clock.checkAlarmEnabled(1));
+  
   // Trigger Alarm when Minute == 30 or 0
   // Clock.setA1Time(Day, Hour, Minute, Second, AlarmBits, DayOfWeek, 12 hour mode, PM)
   Clock.setA1Time(10, hours, mins, secs, ALARM_BITS, false, false, false);  //the day doesn't matter here
@@ -325,9 +333,19 @@ hours = tend % 24;
   // sleep
   Serial.println(F("going 2 sleep"));
   Serial.flush();
-  digitalWrite(messagePin, 0);
-  delay(500);
   
+  //adjust pin states
+  digitalWrite(messagePin, 0);
+  pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
+  
+  while (digitalRead(messagePin) != 0)
+    Serial.println(F("LED still on"));
+  
+   while (digitalRead(wakeUpPin) != 1)
+    Serial.println(F("wakeup still low"));
+  //Serial.println("wakeup ok"+(String)digitalRead(wakeUpPin)); Serial.flush();
+  
+
 
   noInterrupts ();          // make sure we don't get interrupted before we sleep  
   attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
