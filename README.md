@@ -107,6 +107,6 @@ Both wires still use the connector plugs, but could likewise also be soldered di
 Appears erratically. Try:
 - restart Arduino
 
-- remove and reinsert SD-card, then restart Arduino
+- remove and reinsert SD-card (check write-protection), then restart Arduino
 
 - format SD-card 
