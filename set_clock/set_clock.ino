@@ -145,7 +145,11 @@ void loop() {
 		Clock.setHour(Hour);
 		Clock.setMinute(Minute);
 		Clock.setSecond(Second);
-
+    
+FILE serial_stdout;
+fdev_setup_stream(&serial_stdout, serial_putchar, NULL, _FDEV_SETUP_WRITE);
+stdout = &serial_stdout;
+  
   Serial.print((String)"Current RTC-time: "); 
   printf("%02d-", Clock.getYear());
   printf("%02d-", Clock.getMonth(Century));
