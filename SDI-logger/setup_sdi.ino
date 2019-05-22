@@ -2,7 +2,7 @@
 
 
 //for SDI-12 sensor
-#define DATA_PIN 8         // The pin of the SDI-12 data bus (UNO: 7; Pro Micro: 8)
+#define DATA_PIN 7         // The pin of the SDI-12 data bus (UNO: 7; Pro Micro: 8)
 #define POWER_PIN -1       // The sensor power pin (or -1, if not switching power)
 const char sdi_addresses[] = { '1'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 
