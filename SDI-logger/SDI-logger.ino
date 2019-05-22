@@ -1,6 +1,6 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.22
+//ver 1.23
 
 //see instructions at https://github.com/TillF/SDI-logger
 
