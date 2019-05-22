@@ -17,8 +17,8 @@
 #define messagePin 3 // (optional) pin for connecting LED indicating messages (UNO: don't use 0 or 1 when connected to USB; Pro Micro: 17)
 
 //time settings
-#define INTERVAL 60*20 //interval between measurements [sec]. Must result in an integer number of intervals per day.
-#define AWAKE_TIME 5 //time for being awake before and after actual measurement [sec].
+#define INTERVAL 10 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define AWAKE_TIME 10 //time for being awake before and after actual measurement [sec].
 
   //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 #define HOUR_START 2   
@@ -237,7 +237,7 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   //wait before sleep
   Serial.print(F("Time to wait1:"));
   Serial.println(AWAKE_TIME);
-  wait(AWAKE_TIME*1000);
+  wait(AWAKE_TIME);
   
   //sleep
   timestamp_curr = RTC.now().unixtime();
@@ -254,16 +254,16 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   time2next = (timestamp_next - timestamp_curr);  //compute time to spend in wait mode
   Serial.print(F("Time to wait2:"));
   Serial.println(time2next);
-  wait(time2next*1000);
+  wait(time2next);
   
 }
 
-void wait(long interval) //wait for the requested number of millisec while still showing output/LED-activity at certain times
+void wait(long interval) //wait for the requested number of secs while still showing output/LED-activity at certain times
 {
   const int blink_interval = 2000; //blink LED every nn msecs. Should be a multiple of "interval"
   int led_state=HIGH;
   
-  for(long i=interval; i >= 0; i -= blink_interval)
+  for(long i=interval*1000; i >= 0; i -= blink_interval)
   {
     Serial.print(F("reading in "));
     Serial.println(String(i/1000) +" s"); 
