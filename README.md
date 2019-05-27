@@ -21,7 +21,7 @@ Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time s
 
 ## Hardware required
 - tested with Arduino Uno, rev. 3
-- D3231 real time clock, SD-card slot (or both combined in Shield, e.g. https:snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html)
+- D3231 real time clock, SD-card slot (or both combined in a Shield, e.g. https:snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html [no longer produced] or Keyes Date logging Shield [reconstruction steps below])
 
 for wiring details, see below
 
@@ -110,3 +110,22 @@ Appears erratically. Try:
 - remove and reinsert SD-card (check write-protection), then restart Arduino
 
 - format SD-card 
+
+## Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
+
+- aim: replace poor DS1307 RTC with DS3231, use power LED as message LED
+
+- Disconnect / scratch conductor paths
+	- between + of Li-cell and adjacent unneeded RTC-chip (8 legs)
+	- between resistor next to power LED and capacitor (side of analog pins)
+	- on backside: L-shaped track from 5-V-pin to unneeded RTC
+	
+- solder D3 to resistor next to power LED (side of analog pins) (blue)
+- RTC
+		- remove Vcc-pin
+		- solder cable to outer battery pin (+) (green)
+		- solder to holes next to power LED
+- solder cable to + of Li-cell (green)
+- solder cable to VCC of RTC and 5V-hole next to 3V3 hole  (green)
+- solder D2 to third pin of RTC, counting from C1 (blue)
+
