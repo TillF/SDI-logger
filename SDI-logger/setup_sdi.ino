@@ -29,7 +29,7 @@ void setup_sdi(){
   File dataFile = SD.open(logfile_name, FILE_WRITE);
   if (!dataFile) 
      error_message(3, -1); //blink LED 3 times
-  //rr dataFile.print("#"); //open first line
+  dataFile.print("#"); //open first line
   //get IDs of all requested SDI-sensors
   for (byte i=0; i < strlen(sdi_addresses); i++)
   {
@@ -115,10 +115,12 @@ String read_sdi(char i){
   // find out how long we have to wait (in seconds).
   uint8_t wait = 0;
   wait = temp_str.substring(1,4).toInt();
-  //Serial.print(F("wait: ")+(String)wait); //print required time for measurement [s]
+  //Serial.print("wait:"+(String)wait); //print required time for measurement [s]
 
   // Set up the number of results to expect
   uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
+  //Serial.println("tstr:"+temp_str); //print number of expected measurement [s]
+  //Serial.println("meas xpected:"+(String)numMeasurements); //print number of expected measurement [s]
 
   unsigned long timerStart = millis();
   while((millis() - timerStart) < (1000 * wait)){
@@ -142,11 +144,12 @@ String read_sdi(char i){
     temp_str += i;
     temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
     mySDI12.sendCommand(temp_str);
-  //  Serial.print(F("requested data "));
+  //Serial.println(F("request data "));
     while(!mySDI12.available()>1); // wait for acknowlegement
     delay(300); // let the data transfer
     result += readSDIBuffer();
- //   Serial.print(F("data:")+(String)dataOption+":"+(String)result);
+    //Serial.println("data:"+(String)dataOption+":"+(String)result);
+    //Serial.println("count:"+(String)count_values(result));
     if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
     dataOption++; //read the next "D-channel" during the next loop
   }

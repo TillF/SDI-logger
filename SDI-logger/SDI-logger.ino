@@ -1,6 +1,6 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.23
+//ver 1.24
 
 //see instructions at https://github.com/TillF/SDI-logger
 
@@ -17,11 +17,11 @@
 #define messagePin 3 // (optional) pin for connecting LED indicating messages (UNO: don't use 0 or 1 when connected to USB; Pro Micro: 17)
 
 //time settings
-#define INTERVAL 10 //interval between measurements [sec]. Must result in an integer number of intervals per day.
-#define AWAKE_TIME 10 //time for being awake before and after actual measurement [sec].
+#define INTERVAL 1200 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define AWAKE_TIME 1200 //time for being awake before and after actual measurement [sec].
 
   //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
-#define HOUR_START 2   
+#define HOUR_START 0   
 #define MINUTE_START 20
 #define SEC_START 0
 #define TIMESTAMP_START (HOUR_START*3600 + MINUTE_START*60 + SEC_START) //don't change this
@@ -126,13 +126,13 @@ void setup() { //this function is run once on power-up
 String read_sensors()
 {
  String output_string;
- //output_string += read_all_SDI();
+ output_string += read_all_SDI();
   
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
   output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
   //Serial.println("V"+output_string);
- //if (output_string=="") //no data from sensor
- //    error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
+ if (output_string=="") //no data from sensor
+     error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
  return(output_string);
 }
 
@@ -376,7 +376,7 @@ void loop() { //this function is called repeatedly as long as the arduino is run
  
   output_string += read_sensors(); //measure and read data from sensor 
   
-  Serial.print(F("string to log:"));Serial.println((String)output_string); 
+  //Serial.print(F("string to log:"));Serial.println((String)output_string); 
  
  File dataFile = SD.open(logfile_name, FILE_WRITE);
 
