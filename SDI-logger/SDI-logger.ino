@@ -1,9 +1,8 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.24
 
 //see instructions at https://github.com/TillF/SDI-logger
-
+#define ver_string "1.25"
 
 // Begin settings -------------------------------------------------
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port (only relevant when conected to computer)
@@ -67,7 +66,7 @@ void setup_sdcard()
   Serial.flush();
 }
 
-void setup_clock()
+String setup_clock()
 {
   char DateAndTimeString[22]; //19 digits plus the null char
   // Initialize the rtc object
@@ -82,16 +81,20 @@ void setup_clock()
   //Serial.println(F("RTC-time: ")+(String)now.year()+"/"+ (String)now.month()+"/"+ (String)now.day()+" "+ (String)now.hour()+":"+ (String)now.minute()+":"+ (String)now.second());
   Serial.print(F("RTC-time: "));
   Serial.println(DateAndTimeString);
-
-  //logfile_name = (String)Clock.getYear()+(String)Clock.getMonth(Century)+(String)Clock.getDate();
-
-  //assemble name of logfile to be created
+  
   sprintf(DateAndTimeString, "%4d%02d%02d", now.year(), now.month(),now.day()); 
-  logfile_name = (String)DateAndTimeString+".";
+  return ((String)DateAndTimeString);
+  
+}
+
+void setup_logfile(String DateAndTimeString, String headerstr)
+{
+  //assemble name of logfile to be created
+   logfile_name = DateAndTimeString+".";
   
   //set file extension from logger ID read from EEPROM
-  char logger_id[3] = "L01";  //Variable to store in EEPROM.
-  int eeAddress = 0;   //Location we want the data to be put.
+  char logger_id[3];  //Variable to store contents from EEPROM.
+  int eeAddress = 0;   //Location we want the data from
   EEPROM.get(eeAddress, logger_id);
   if ( (logger_id[0] < '0') | (logger_id[0] > 'z')) //this doesn't seem to be a proper string
     logfile_name += "log"; else //revert to default
@@ -99,6 +102,17 @@ void setup_clock()
     
   Serial.print(F("logfile:"));
   Serial.println(logfile_name); 
+  
+  //write header line for output file
+    
+  File dataFile = SD.open(logfile_name, FILE_WRITE);
+  if (!dataFile) 
+     error_message(3, -1); //blink LED 3 times
+  dataFile.print("#"); //open first line
+  dataFile.print(ver_string); //write SDI script version to top of output file
+  dataFile.print(": "+headerstr); //write SDI sensor ID to top of output file
+  dataFile.println(""); //add line break to header line
+  dataFile.close();
 }
 
 void setup() { //this function is run once on power-up
@@ -117,9 +131,12 @@ void setup() { //this function is run once on power-up
     pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
   }  
 
-  setup_clock();
-  setup_sdcard();
-  setup_sdi();
+  String tmp_str;  //holds date
+  String tmp_str2; //holds IDs of devices
+  tmp_str =  setup_clock();
+             setup_sdcard();
+  tmp_str2 = setup_sdi(); //setup SDI devices and retrieve their names
+             setup_logfile(tmp_str, tmp_str2);
 }
 
 

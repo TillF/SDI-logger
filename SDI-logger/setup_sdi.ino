@@ -10,7 +10,7 @@ const char sdi_addresses[] = { '1'}; //list of IDs of attached SDI-sensors (sing
 #include <SDI12.h>
 SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
 
-void setup_sdi(){
+String setup_sdi(){
   Serial.print(F("Init SDI-12 bus..."));
   mySDI12.begin();
   delay(500); // allow things to settle
@@ -23,43 +23,24 @@ void setup_sdi(){
     delay(200);
   }
 
-  //write sensor ID to top of output file
-  //rr 
-  /*
-  File dataFile = SD.open(logfile_name, FILE_WRITE);
-  if (!dataFile) 
-     error_message(3, -1); //blink LED 3 times
-  dataFile.print("#"); //open first line
+  String result="";
+  String temp_str; 
+
   //get IDs of all requested SDI-sensors
   for (byte i=0; i < strlen(sdi_addresses); i++)
   {
-    String temp_str = "";  //generate command
-    temp_str += sdi_addresses[i];
+    temp_str = sdi_addresses[i];
     temp_str += "I!"; // SDI-12 identification command format  [address]['I'][!]
     mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
     delay(30);
     //Serial.println(temp_str);
     
-    temp_str = "";
-    char c;
-    delay(30);
-    while (mySDI12.available())  // build response string
-    {
-      c = mySDI12.read();
-      if ((c != '\n') && (c != '\r'))
-      {
-        temp_str += c;
-        delay(5);
-      }
-    }
-    mySDI12.clearBuffer();
-       
-    dataFile.print(temp_str + ";");
+    result += readSDIBuffer()+";";
+    //Serial.println("found sensors:"+result); 
+    mySDI12.clearBuffer();    
   }
-  dataFile.println("");
-  dataFile.close();
-  */
   Serial.println(F("ok."));
+  return(result);
 }
 
 
