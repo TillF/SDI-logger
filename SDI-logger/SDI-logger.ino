@@ -1,9 +1,9 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
 //Till Francke, 2019
-//ver 1.23
+
 
 //see instructions at https://github.com/TillF/SDI-logger
-
+#define ver_string "1.25"
 
 // Begin settings -------------------------------------------------
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port (only relevant when conected to computer)
@@ -17,11 +17,12 @@
 #define messagePin 3 // (optional) pin for connecting LED indicating messages (UNO: don't use 0 or 1 when connected to USB; Pro Micro: 17)
 
 //time settings
-#define INTERVAL 10 //interval between measurements [sec]. Must result in an integer number of intervals per day.
-#define AWAKE_TIME 10 //time for being awake before and after actual measurement [sec].
+#define INTERVAL 1200 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define AWAKE_TIME 1200 //time for being awake before and after actual measurement [sec].
 
   //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
-#define HOUR_START 2   
+
+#define HOUR_START 0   
 #define MINUTE_START 20
 #define SEC_START 0
 #define TIMESTAMP_START (HOUR_START*3600 + MINUTE_START*60 + SEC_START) //don't change this
@@ -67,7 +68,8 @@ void setup_sdcard()
   Serial.flush();
 }
 
-void setup_clock()
+
+String setup_clock()
 {
   char DateAndTimeString[22]; //19 digits plus the null char
   // Initialize the rtc object
@@ -82,16 +84,20 @@ void setup_clock()
   //Serial.println(F("RTC-time: ")+(String)now.year()+"/"+ (String)now.month()+"/"+ (String)now.day()+" "+ (String)now.hour()+":"+ (String)now.minute()+":"+ (String)now.second());
   Serial.print(F("RTC-time: "));
   Serial.println(DateAndTimeString);
-
-  //logfile_name = (String)Clock.getYear()+(String)Clock.getMonth(Century)+(String)Clock.getDate();
-
-  //assemble name of logfile to be created
+  
   sprintf(DateAndTimeString, "%4d%02d%02d", now.year(), now.month(),now.day()); 
-  logfile_name = (String)DateAndTimeString+".";
+  return ((String)DateAndTimeString);
+  
+}
+
+void setup_logfile(String DateAndTimeString, String headerstr)
+{
+  //assemble name of logfile to be created
+   logfile_name = DateAndTimeString+".";
   
   //set file extension from logger ID read from EEPROM
-  char logger_id[3] = "L01";  //Variable to store in EEPROM.
-  int eeAddress = 0;   //Location we want the data to be put.
+  char logger_id[3];  //Variable to store contents from EEPROM.
+  int eeAddress = 0;   //Location we want the data from
   EEPROM.get(eeAddress, logger_id);
   if ( (logger_id[0] < '0') | (logger_id[0] > 'z')) //this doesn't seem to be a proper string
     logfile_name += "log"; else //revert to default
@@ -99,6 +105,17 @@ void setup_clock()
     
   Serial.print(F("logfile:"));
   Serial.println(logfile_name); 
+  
+  //write header line for output file
+    
+  File dataFile = SD.open(logfile_name, FILE_WRITE);
+  if (!dataFile) 
+     error_message(3, -1); //blink LED 3 times
+  dataFile.print("#"); //open first line
+  dataFile.print(ver_string); //write SDI script version to top of output file
+  dataFile.print(": "+headerstr); //write SDI sensor ID to top of output file
+  dataFile.println(""); //add line break to header line
+  dataFile.close();
 }
 
 void setup() { //this function is run once on power-up
@@ -117,9 +134,12 @@ void setup() { //this function is run once on power-up
     pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
   }  
 
-  setup_clock();
-  setup_sdcard();
-  setup_sdi();
+  String tmp_str;  //holds date
+  String tmp_str2; //holds IDs of devices
+  tmp_str =  setup_clock();
+             setup_sdcard();
+  tmp_str2 = setup_sdi(); //setup SDI devices and retrieve their names
+             setup_logfile(tmp_str, tmp_str2);
   setup_imu();
 }
 
@@ -127,14 +147,14 @@ void setup() { //this function is run once on power-up
 String read_sensors()
 {
  String output_string;
- //output_string += read_all_SDI();
+ output_string += read_all_SDI();
  output_string += read_imu();
   
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
   output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
   //Serial.println("V"+output_string);
- //if (output_string=="") //no data from sensor
- //    error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
+ if (output_string=="") //no data from sensor
+     error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
  return(output_string);
 }
 
@@ -378,7 +398,7 @@ void loop() { //this function is called repeatedly as long as the arduino is run
  
   output_string += read_sensors(); //measure and read data from sensor 
   
-  Serial.print(F("string to log:"));Serial.println((String)output_string); 
+  //Serial.print(F("string to log:"));Serial.println((String)output_string); 
  
  File dataFile = SD.open(logfile_name, FILE_WRITE);
 
