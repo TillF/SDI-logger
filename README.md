@@ -75,6 +75,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  SDI-12 Data -> pin (default: D7) 
  
  e.g. Truebner SMC: data: green; ground: white; V+: brown
+ 
       delta_T PR2: data: black; ground: blue; V+: white (needs external 12 V)
  
 
@@ -109,14 +110,16 @@ Appears erratically. Try:
 
 - remove and reinsert SD-card (check write-protection), then restart Arduino
 
-- format SD-card 
+- format SD-card
+
+- check data of RTC: if the date is wrong, an illegal filename is generated 
 
 ## Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
 
 - aim: replace poor DS1307 RTC with DS3231, use power LED as message LED
 
 - Disconnect / scratch conductor paths
-	- between + of Li-cell and adjacent unneeded RTC-chip (8 legs)
+	- between "+" of Li-cell and adjacent unneeded RTC-chip (8 legs)
 	- between resistor next to power LED and capacitor (side of analog pins)
 	- on backside: L-shaped track from 5-V-pin to unneeded RTC
 	
