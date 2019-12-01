@@ -64,7 +64,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  CS -> pin (default: D10 )
  
 
-### SDI-12 (only one SDI-12 device supported)
+### SDI-12 (multiple SDI-12 devices supported but not yet tested)
 
  SDI-device ->  Arduino-pin 
  
@@ -74,9 +74,11 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  
  SDI-12 Data -> pin (default: D7) 
  
- e.g. Truebner SMC: data: green; ground: white; V+: brown
+ e.g. 
  
-      delta_T PR2: data: black; ground: blue; V+: white (needs external 12 V)
+ Truebner SMC: data: green; ground: white; V+: brown
+ 
+ delta_T PR2: data: black; ground: blue; V+: white (needs external 12 V)
  
 
 ### message LED (optional)
