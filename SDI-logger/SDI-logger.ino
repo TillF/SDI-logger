@@ -2,7 +2,7 @@
 //Till Francke, 2019
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string "1.25"
+#define ver_string "1.27"
 
 // Begin settings -------------------------------------------------
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port (only relevant when conected to computer)
@@ -17,7 +17,7 @@
 
 //time settings
 #define INTERVAL 1200 //interval between measurements [sec]. Must result in an integer number of intervals per day.
-#define AWAKE_TIME 1200 //time for being awake before and after actual measurement [sec].
+#define AWAKE_TIME 5 //time for being awake before and after actual measurement [sec].
 
   //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 #define HOUR_START 0   
@@ -45,28 +45,29 @@ DateTime now;
 //for reading logger ID from EEPROM
 #include <EEPROM.h>
 
-String logfile_name="";
+//String logfile_name="";
+char logfile_name[12]="";
 
 long timestamp_next=0; //timestamp of next reading 
 long timestamp_curr; //current timestamp
 
 
 
-void setup_sdcard()
+void setup_sdcard(byte repeat)
 {
   Serial.print(F("Init SD card..."));
   
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
     Serial.println(F("Card failed, or not present"));
-    error_message(2, -1);
+    error_message(2, repeat);
   }
    
    Serial.println(F("ok."));
   Serial.flush();
 }
 
-String setup_clock()
+char setup_clock()
 {
   char DateAndTimeString[22]; //19 digits plus the null char
   // Initialize the rtc object
@@ -82,23 +83,26 @@ String setup_clock()
   Serial.print(F("RTC-time: "));
   Serial.println(DateAndTimeString);
   
-  sprintf(DateAndTimeString, "%4d%02d%02d", now.year(), now.month(),now.day()); 
-  return ((String)DateAndTimeString);
-  
+  sprintf(logfile_name, "%4d%02d%02d.", now.year(), now.month(),now.day()); //generate name of logfile
+  //return (DateAndTimeString); 
 }
 
-void setup_logfile(String DateAndTimeString, String headerstr)
+void setup_logfile(String headerstr)
 {
   //assemble name of logfile to be created
-   logfile_name = DateAndTimeString+".";
+   //logfile_name = DateAndTimeString+".";
+  //sprintf(logfile_name, "%s.", DateAndTimeString);
+  //Serial.println(logfile_name); 
   
   //set file extension from logger ID read from EEPROM
   char logger_id[3];  //Variable to store contents from EEPROM.
   int eeAddress = 0;   //Location we want the data from
   EEPROM.get(eeAddress, logger_id);
   if ( (logger_id[0] < '0') | (logger_id[0] > 'z')) //this doesn't seem to be a proper string
-    logfile_name += "log"; else //revert to default
-    logfile_name += (String)logger_id;
+    //logfile_name += "log"; else //revert to default
+    sprintf(logfile_name, "%slog",logfile_name); else //revert to default
+   //logfile_name += (String)logger_id;
+    sprintf(logfile_name, "%s%s",logfile_name, logger_id); 
     
   Serial.print(F("logfile:"));
   Serial.println(logfile_name); 
@@ -131,12 +135,11 @@ void setup() { //this function is run once on power-up
     pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
   }  
 
-  String tmp_str;  //holds date
   String tmp_str2; //holds IDs of devices
-  tmp_str =  setup_clock();
-             setup_sdcard();
+             setup_clock();
+             setup_sdcard(-1);
   tmp_str2 = setup_sdi(); //setup SDI devices and retrieve their names
-             setup_logfile(tmp_str, tmp_str2);
+             setup_logfile(tmp_str2);
 }
 
 
@@ -181,8 +184,6 @@ String read_sensors()
      return results;
 
     }
-  
-
 
 void blink_led(int times, String msg) //blink message LED, if exists
 {
@@ -208,12 +209,10 @@ void error_message(byte error_id, int8_t times) //blink and issue message for <t
                      "no data from sensor" //4
                       };
   int8_t i;
-  while(1)
+  for(i=0; i <= times; i++)
   {
     blink_led(error_id, errors[error_id] );
     delay(2000);
-    i = (i+1) % 120; //increment but prevent rollover to negative values
-    if (i== times) break;
   }  
 }
 
@@ -252,14 +251,14 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   long time2next;
 
   //wait before sleep
-  Serial.print(F("Time to wait1:"));
+  Serial.print(F("Time2wait1:"));
   Serial.println(AWAKE_TIME);
   wait(AWAKE_TIME);
   
   //sleep
   timestamp_curr = RTC.now().unixtime();
   time2next = timestamp_next - timestamp_curr - AWAKE_TIME;  //compute time to spend in sleep mode
-  Serial.print(F("Time to sleep:"));
+  Serial.print(F("Time2sleep:"));
   Serial.println((String)time2next);
   //delay(time2next*1000); 
   sleep(time2next);
@@ -269,7 +268,7 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   //Serial.print(F("Current timestamp:" ));
   //Serial.println(timestamp_curr);
   time2next = (timestamp_next - timestamp_curr);  //compute time to spend in wait mode
-  Serial.print(F("Time to wait2:"));
+  Serial.print(F("Time2wait2:"));
   Serial.println(time2next);
   wait(time2next);
   
@@ -287,7 +286,7 @@ void wait(long interval) //wait for the requested number of secs while still sho
     if (messagePin !=0)
     {
       digitalWrite(messagePin, led_state);
-      led_state=!led_state;  //invert LED-state
+      led_state = !led_state;  //invert LED-state
     } 
     delay(blink_interval);
   }
@@ -295,19 +294,22 @@ void wait(long interval) //wait for the requested number of secs while still sho
 
 void sleep(long time2sleep)
 {
+  byte t=LOW; //rr
   if (time2sleep < 1) return; //no short naps!
   DS3231 Clock; 
 
   // Set alarm
   //Serial.println(F("Setting alarm"));
-  reset_alarm_pin(); //otherwise, voltage stays high there
-
+  pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
+  reset_alarm_pin(); //otherwise, voltage stays low there
+  delay(10);
+   
   //compute time of next wake up
   now = RTC.now(); //get current time
   byte secs =now.second(); //extract components
   byte mins =now.minute();
   byte hours=now.hour();
- Serial.print(F("current time:"));
+ Serial.print(F("cur time:"));
  Serial.println((String)hours+":"+(String)mins+":"+(String)secs);
 
   long tstart = (long)hours*3600 + (long)mins * 60 + secs; //convert start time as timestamp
@@ -320,15 +322,15 @@ mins = tend % 60;
 tend /= 60;
 hours = tend % 24;
 
-  Serial.print(F("alarm to set:"));
-  Serial.println((String)hours+":"+(String)mins+":"+(String)secs);
+  //Serial.print(F("alarm to set:"));
+  //Serial.println((String)hours+":"+(String)mins+":"+(String)secs);
 
    // This is the interesting part which sets the AlarmBits and configures, when the Alarm be triggered
   byte ALRM1_SET = ALRM1_MATCH_HR_MIN_SEC; // trigger A1 when hours, minute and second match
 
   // combine the AlarmBits (only Alarm 1 used here)
   int ALARM_BITS = 0;
-  ALARM_BITS <<= 4;
+  //ALARM_BITS <<= 4; //for combining both alarm1 and alarm 2
   ALARM_BITS |= ALRM1_SET;
   
   //Serial.print(F("Status Alarm 1:")); Serial.println(Clock.checkAlarmEnabled(1));
@@ -339,40 +341,31 @@ hours = tend % 24;
  
   // Turn on Alarm
   Clock.turnOnAlarm(1);
-  //Clock.turnOffAlarm(2);
-  
-  //Serial.println(ALARM_BITS,BIN);
   //Serial.print(F("Status Alarm 1:")); Serial.println(Clock.checkAlarmEnabled(1));
   //Serial.println(F("Status Alarm 2:")+(String)Clock.checkAlarmEnabled(2));
   
   // sleep
   Serial.println(F("going 2 sleep"));
-  Serial.flush();
-  
   //adjust pin states
-  digitalWrite(messagePin, 0);
-  pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
-  
-  while (digitalRead(messagePin) != 0)
-    Serial.println(F("LED still on"));
-  
-   while (digitalRead(wakeUpPin) != 1)
-    Serial.println(F("wakeup still low"));
-  //Serial.println("wakeup ok"+(String)digitalRead(wakeUpPin)); Serial.flush();
-  
-
-
+  digitalWrite(messagePin, LOW); //switch off LED
+      
+  Serial.flush();
+  delay(50);
+ 
   noInterrupts ();          // make sure we don't get interrupted before we sleep  
+  EIFR = bit (digitalPinToInterrupt(wakeUpPin));  // clear flag for interrupt (deletes any pending interrupt calls) 
   attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
+  //Serial.flush();
   interrupts ();           // interrupts allowed now, next instruction WILL be executed
   LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);  //go to sleep
+  
   Serial.println(F("Woken")); //rr
   Serial.flush();
 }
 
 void wakeUp() {
   detachInterrupt(digitalPinToInterrupt(wakeUpPin)); //prevent multiple invocations of interrupt 
-  digitalWrite(messagePin, 1);
+  digitalWrite(messagePin, HIGH);
 }
 
 void loop() { //this function is called repeatedly as long as the arduino is running
@@ -395,7 +388,8 @@ void loop() { //this function is called repeatedly as long as the arduino is run
   
   //Serial.print(F("string to log:"));Serial.println((String)output_string); 
  
- File dataFile = SD.open(logfile_name, FILE_WRITE);
+  setup_sdcard(3); //re-initialize the SD-card in case it has been removed
+  File dataFile = SD.open(logfile_name, FILE_WRITE);
 
  
   // if the file is available, write to it:
@@ -411,11 +405,11 @@ void loop() { //this function is called repeatedly as long as the arduino is run
   else {
     //Serial.print(F("error opening "));
     //Serial.println(logfile_name);
-    error_message(3, -1); //blink LED 3 times
+    error_message(3, 5); //blink LED 3 times, repeat 30 times
   }
     timestamp_next = time_next_reading(timestamp_curr);
 
-  Serial.println(F("preparing sleep and wait..."));
+  Serial.println(F("wait&sleep.."));
   sleep_and_wait(); 
   
 }
