@@ -2,7 +2,7 @@
 //Till Francke, 2019
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string "1.27"
+#define ver_string "1.28"
 
 // Begin settings -------------------------------------------------
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port (only relevant when conected to computer)
@@ -354,7 +354,7 @@ hours = tend % 24;
  
   noInterrupts ();          // make sure we don't get interrupted before we sleep  
   EIFR = bit (digitalPinToInterrupt(wakeUpPin));  // clear flag for interrupt (deletes any pending interrupt calls) 
-  attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
+  attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, LOW);
   //Serial.flush();
   interrupts ();           // interrupts allowed now, next instruction WILL be executed
   LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);  //go to sleep
