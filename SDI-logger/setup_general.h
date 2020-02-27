@@ -6,8 +6,8 @@
 #define chipSelect 10  //pin used by SD-card slot. default: 10
 
 //further pins
-#define wakeUpPin 2 // Interrupt Pin used (should be 2 on UNO, 7 on Pro Micro) 
-#define messagePin 3 // (optional) pin for connecting LED indicating messages (UNO: 3, don't use 0 or 1 when connected to USB; Pro Micro: 17)
+#define wakeUpPin 7 // Interrupt Pin used (should be 2 on UNO, 7 on Pro Micro) 
+#define messagePin 17 // (optional) pin for connecting LED indicating messages (UNO: don't use 0 or 1 when connected to USB; Pro Micro: 17)
 
 //time settings
 #define INTERVAL 10 //interval between measurements [sec]. Must result in an integer number of intervals per day.
