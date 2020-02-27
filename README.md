@@ -38,15 +38,15 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
 ### RTC (when using Shield, only SWQ (between battery and SD-card slot) required)
 
- SD-card-pin ->  Arduino-pin
+ SD-card-pin ->  Arduino-pin Uno (Pro Micro)
  
- Vin -> 5 V
+ Vin -> 5 V (Vcc)
  
  GND -> GND
  
- SCL -> Analog 5
+ SCL -> Analog 5 (3)
  
- SDA -> Analog 4
+ SDA -> Analog 4 (2)
  
  SQW -> pin (default: 2 on Uno, 7 on Pro Micro)  (optional, required only when using sleep mode)
 
@@ -55,13 +55,13 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
  SD-card-pin ->  Arduino-pin
  
- MOSI -> pin D11
+ MOSI -> pin D11 (16)
  
- MISO -> pin D12
+ MISO -> pin D12 (14)
  
- CLK (or SLK) -> pin D13
+ CLK (or SLK) -> pin D13 (15)
  
- CS -> pin (default: D10 )
+ CS -> pin "chipSelect"(default: D10 )
  
 
 ### SDI-12 (multiple SDI-12 devices supported but not yet tested)
@@ -104,7 +104,9 @@ Both wires still use the connector plugs, but could likewise also be soldered di
 
 ## FAQs
 ### Arduino gets stuck after message "going 2 sleep"
-- Unfortunately, sleep mode is still experimental and buggy. Disable it by setting AWAKE_TIME to a value greater than INTERVAL to disable sleeping.
+- Some boards (e.g. Pro Micro) do no reconnect USB after sleep mode. The logger may still be running fine. Verify this by checking the status LED or the records on the SC-card.
+
+- Unfortunately, sleep mode is not supported by all chips. Disable it by setting AWAKE_TIME to a value greater than INTERVAL to disable sleeping.
 
 ### Message "SD-card write error"
 Appears erratically. Try:

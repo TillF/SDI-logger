@@ -2,21 +2,21 @@
 //Till Francke, 2019
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string "1.28"
+#define ver_string "1.29"
 
 // Begin settings -------------------------------------------------
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port (only relevant when conected to computer)
 
   
 //for SD-card
-#define chipSelect 10  //pin used by SD-card slot. For the Snootlab-Shield, this is fixed to 10
+#define chipSelect 10  //pin used by SD-card slot. default: 10
 
 //further pins
-#define wakeUpPin 2 // Interrupt Pin used (should be 2 on UNO, 7 on Pro Micro) 
-#define messagePin 3 // (optional) pin for connecting LED indicating messages (UNO: don't use 0 or 1 when connected to USB; Pro Micro: 17)
+#define wakeUpPin 7 // Interrupt Pin used (should be 2 on UNO, 7 on Pro Micro) 
+#define messagePin 17 // (optional) pin for connecting LED indicating messages (UNO: don't use 0 or 1 when connected to USB; Pro Micro: 17)
 
 //time settings
-#define INTERVAL 1200 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define INTERVAL 20 //interval between measurements [sec]. Must result in an integer number of intervals per day.
 #define AWAKE_TIME 5 //time for being awake before and after actual measurement [sec].
 
   //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
@@ -122,7 +122,7 @@ void setup_logfile(String headerstr)
 void setup() { //this function is run once on power-up
   // Open serial communications and wait for port to open:
   Serial.begin(SERIAL_BAUD);
-    while(!Serial);// wait for serial port to connect. Needed for native USB port only
+    //while(!Serial);// wait for serial port to connect. Needed for native USB port only
 
   if (messagePin !=0)  //initialize message LED, if present
   {
