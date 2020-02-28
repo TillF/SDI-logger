@@ -2,25 +2,33 @@
 Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time stamp.
 
 ## Features
-- requires low-cost datahardware (starting from 15 € [2019], excluding power supply, SD-card and casing)
+- requires low-cost hardware (starting from 10 € [2019], excluding power supply, SD-card and casing)
 - data logging to SD-card
 - use of low-drift clock (D3231)
-- supports reading of multiple SDI-sensors
+- supports reading/logging of 
+	- multiple SDI-sensors
+	- (pseudo-)voltage at controler for brownout-detection
+	- event (e.g. reed contact)
+	- IMU (magnetometer, gyrometer)
 - optional sleep mode to save power
 - optional support of message LED for indicating logger status
 - optional assignment of unique logger-ID for managing multiple loggers
-- optional logging of (pseudo-)voltage at controler for brownout-detection
-
 
 ## Usage
 - install hardware required (see "Hardware required" and "Wiring")
 - install libraries (see "Software required")
 - verify/set clock using separate script (e.g. ```set_clock.ino```)
 - verify/set logger-id using separate script (e.g. ```set_id.ino```)
-- adjust settings (see section "Settings" in ```SDI-logger.ino```)
+- adjust settings 
+	- ```setup_general.h``` (general settings)
+	- ```setup_event.h``` (when using the event logger)
+	- ```setup_imu.h``` (when using IMU)
+- enable/disable required header files in ```SDI-logger.ino```
+- enable/disable reading of required sensors in ```read_sensors()``` in ```SDI-logger.ino```
+- upload and run!	
 
 ## Hardware required
-- tested with Arduino Uno, rev. 3
+- tested with Arduino Uno, rev. 3 and Pro Micro
 - D3231 real time clock, SD-card slot (or both combined in a Shield, e.g. https:snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html [no longer produced] or Keyes Date logging Shield [reconstruction steps below])
 
 for wiring details, see below
@@ -32,7 +40,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  
  RTC: https://github.com/NorthernWidget/DS3231 (tested: 31 Oct 2018) delete/rename any existing library to avoid conflicts
  
- sleep mode: https://github.com/rocketscream/Low-Power (tested: V1.8)
+ sleep mode: https://github.com/rocketscream/Low-Power (tested: V1.81)
 
 ## Wiring
 
@@ -53,7 +61,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
 ### SD card (no wiring required when using Shield)
 
- SD-card-pin ->  Arduino-pin
+ SD-card-pin ->  Arduino-pin (Pro Micro)
  
  MOSI -> pin D11 (16)
  
@@ -66,13 +74,13 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
 ### SDI-12 (multiple SDI-12 devices supported but not yet tested)
 
- SDI-device ->  Arduino-pin 
+ SDI-device ->  Arduino-pin (Pro Micro)
  
  GND -> GND
  
  +Vbat -> 5 V (if the external device needs more than 5 V, connect it to external battery instead of the Arduino-pin)
  
- SDI-12 Data -> pin (default: D7) 
+ SDI-12 Data -> pin D7 (8) 
  
  e.g. 
  
@@ -83,7 +91,8 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
 ### message LED (optional)
 
-  Connect LED with appropriate resistor to pin 3 (default) and ground.
+  Uno: Connect LED with appropriate resistor to ```message_pin``` (default: pin 3) and ground (internal LED cannot be used).
+  Pro Micro:  use internal LED.
   
   The LED  can issue the following codes:
   
@@ -117,6 +126,12 @@ Appears erratically. Try:
 - format SD-card
 
 - check data of RTC: if the date is wrong, an illegal filename is generated 
+
+### Power consumption (main board only)
+awake / asleep:
+Uno: ~ 55 mA / 37 mA
+Pro Micro 11 mA / 1.4 mA
+
 
 ## Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
 

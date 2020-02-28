@@ -2,8 +2,10 @@
 //Till Francke, 2020
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string "1.29"
+#define ver_string "1.30"
 #include "setup_general.h" //adjust your board settings in this file
+#include "setup_event.h" //include this if you want to use an event counter
+#include "setup_sdi.h" //include this if you want to use an event counter
 
 // Begin code section - no user changes required below (sic!)
 
@@ -37,7 +39,7 @@ void setup_sdcard(byte repeat)
   
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
-    Serial.println(F("Card failed, or not present"));
+    Serial.println(F("Card failed or not present"));
     error_message(2, repeat);
   }
    
@@ -117,6 +119,7 @@ void setup() { //this function is run once on power-up
              setup_clock();
              setup_sdcard(-1);
   tmp_str2 = setup_sdi(); //setup SDI devices and retrieve their names
+             setup_event();
              setup_logfile(tmp_str2);
 }
 
@@ -124,13 +127,20 @@ void setup() { //this function is run once on power-up
 String read_sensors()
 {
  String output_string;
+ //SDI-12
  output_string += read_all_SDI();
-  
+
+ //pseudo-voltage 
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
   output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
-  //Serial.println("V"+output_string);
+  
+ //event counts
+ output_string += "\t"+(String)event_counts;   //add event counter to output
+ event_counts=0; //reset event counter
+ 
  if (output_string=="") //no data from sensor
      error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
+ //Serial.println("V"+output_string);
  return(output_string);
 }
 
