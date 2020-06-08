@@ -1,12 +1,35 @@
 //initialize and read SDI-device
 //for SDI-12 sensor
-#define DATA_PIN 7         // The pin of the SDI-12 data bus (UNO: 7; Pro Micro: 8)
+#if board==uno 
+  #define DATA_PIN 7         // The pin of the SDI-12 data bus (UNO: 7; Pro Micro: 8)
+#endif
+#if board==promicro 
+  #define DATA_PIN 8         // The pin of the SDI-12 data bus (UNO: 7; Pro Micro: 8)
+#endif
+  
 #define POWER_PIN -1       // The sensor power pin (or -1, if not switching power)
-const char sdi_addresses[] = { '0'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
+const char sdi_addresses[] = { '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 
 //for SDI-12 sensor
 #include <SDI12.h>
 SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
+
+String readSDIBuffer(){
+  String buffer = "";
+  mySDI12.read(); // consume address
+  while(mySDI12.available()){
+    char c = mySDI12.read();
+    if(c == '+'){
+      buffer += '\t';
+    }
+    else if ((c != '\n') && (c != '\r')) {
+      buffer += c;
+    }
+    delay(50);
+  }
+ //Serial.print(buffer);
+ return(buffer);
+}
 
 String setup_sdi(){
   Serial.print(F("Init SDI-12 bus..."));
@@ -49,18 +72,6 @@ int count_values(String sdi_string) //return number of values in String by count
     if (sdi_string[i]=='\t') tab_counter++;
   return(tab_counter);
 }
-
-String read_all_SDI() //read all SDI specified in list
-{
-  String output_string;
-  for (byte i=0; i < strlen(sdi_addresses); i++)
-  {
-     if (i > 0) output_string += "\t"; //add field separator
-     output_string += read_sdi(sdi_addresses[i]);     // read SDI sensor
-  }   
-  return(output_string);
-}
-
 
 String read_sdi(char i){
   //Serial.print(F("reading from")+(String)i);
@@ -137,19 +148,13 @@ String read_sdi(char i){
   
 }
 
-String readSDIBuffer(){
-  String buffer = "";
-  mySDI12.read(); // consume address
-  while(mySDI12.available()){
-    char c = mySDI12.read();
-    if(c == '+'){
-      buffer += '\t';
-    }
-    else if ((c != '\n') && (c != '\r')) {
-      buffer += c;
-    }
-    delay(50);
-  }
- //Serial.print(buffer);
- return(buffer);
+String read_all_SDI() //read all SDI specified in list
+{
+  String output_string;
+  for (byte i=0; i < strlen(sdi_addresses); i++)
+  {
+     if (i > 0) output_string += "\t"; //add field separator
+     output_string += read_sdi(sdi_addresses[i]);     // read SDI sensor
+  }   
+  return(output_string);
 }
