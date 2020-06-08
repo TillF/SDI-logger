@@ -2,8 +2,9 @@
 //Till Francke, 2020
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string "1.29"
+#define ver_string "1.30"
 #include "setup_general.h" //adjust your board settings in this file
+#include "setup_sdi.h" //include this if you want to use an event counter
 
 // Begin code section - no user changes required below (sic!)
 
@@ -125,12 +126,12 @@ String read_sensors()
 {
  String output_string;
  output_string += read_all_SDI();
+ if (output_string=="") //no data from sensor
+     error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
   
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
   output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
   //Serial.println("V"+output_string);
- if (output_string=="") //no data from sensor
-     error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
  return(output_string);
 }
 

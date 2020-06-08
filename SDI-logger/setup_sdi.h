@@ -8,7 +8,7 @@
 #endif
   
 #define POWER_PIN -1       // The sensor power pin (or -1, if not switching power)
-const char sdi_addresses[] = { '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
+const char sdi_addresses[] = { '0', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 
 //for SDI-12 sensor
 #include <SDI12.h>
@@ -45,15 +45,14 @@ String setup_sdi(){
   }
 
   String result="";
-  String temp_str; 
+  char temp_str[4]="aI!\0"; // SDI-12 identification command format  [address]['I'][!]
 
   //get IDs of all requested SDI-sensors
   for (byte i=0; i < strlen(sdi_addresses); i++)
   {
-    temp_str = sdi_addresses[i];
-    temp_str += "I!"; // SDI-12 identification command format  [address]['I'][!]
+    temp_str[0] = sdi_addresses[i]; // SDI-12 identification command format  [address]['I'][!]
     mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
-    delay(30);
+    delay(100);
     //Serial.println(temp_str);
     
     result += readSDIBuffer()+";";
