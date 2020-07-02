@@ -113,12 +113,12 @@ String read_sensors(File dataFile)
      error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
   
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
-  output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
+  getVoltage(dataFile); //get internal voltage of board, may help detecting brownouts
   Serial.println("\t"+output_string);
  return(output_string);
 }
 
- int getVoltage(void) // Returns actual value of Vcc (x 100), i.e. internal voltage to processor (http://forum.arduino.cc/index.php?topic=88935.0)
+ int getVoltage(File dataFile) // Returns actual value of Vcc (x 100), i.e. internal voltage to processor (http://forum.arduino.cc/index.php?topic=88935.0)
     {
        
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -142,9 +142,11 @@ String read_sensors(File dataFile)
         // Wait for it to complete
      while( ( (ADCSRA & (1<<ADSC)) != 0 ) );
         // Scale the value
-     int results = (((InternalReferenceVoltage * 1023L) / ADC) + 5L) / 10L; // calculates for straight line value
-     return results;
-
+     int results2 = (((InternalReferenceVoltage * 1023L) / ADC) + 5L) / 10L; // calculates for straight line value
+     
+     String result = "\t"+(String)results2; //add field separator
+     Serial.print(result); //write results to console
+     dataFile.print(result); // write to file
     }
 
 void blink_led(int times, String msg) //blink message LED, if exists
@@ -350,12 +352,12 @@ void loop() { //this function is called repeatedly as long as the arduino is run
    //Serial.print(F("string to log:"));Serial.println((String)output_string); 
    dataFile.print(output_string); //write to file
    Serial.print(F("logged:"));
-   Serial.print(output_string);
+   Serial.print(DateAndTimeString);
    
-   output_string = read_sensors(dataFile); //measure and read data from sensor 
-   dataFile.println(output_string); //write to file
-   Serial.println(output_string);
-   
+   read_sensors(dataFile); //measure and read data from sensor 
+   //dataFile.println(output_string); //write to file
+   //Serial.println(output_string);
+   dataFile.println(); //next line in file
     dataFile.close();
     // print to the serial port too:
    

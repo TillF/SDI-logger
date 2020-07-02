@@ -130,12 +130,10 @@ int read_sdi(char i, File dataFile){
   uint8_t dataOption=0; //number of "D-channel" to access/iterate
   while(dataOption < 10)
   {
-    //temp_str = "";
     temp_str = (String)i;
     temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
     mySDI12.sendCommand(temp_str);
   //Serial.println(F("request data "));
-    Serial.println(temp_str);
     while(!mySDI12.available()>1); // wait for acknowlegement
     delay(300); // let the data transfer ii: reduce?
     result += readSDIBuffer();
@@ -145,20 +143,21 @@ int read_sdi(char i, File dataFile){
     dataOption++; //read the next "D-channel" during the next loop
   }
   mySDI12.clearBuffer();
-  //  return ("SDI1"); //geht
-//  return ("SDI1234"); //geht?
-//  return ("SDI12345"); //geht?
+    result= ("SDIy"); //geht
+//  result= ("SDI1234"); //geht?
+//  result= ("SDI12345"); //geht?
 // result = "SDI123456"; //geht 
-//  return ("SDI1234567"); //geht nicht?
-  //return ("SDI12345678"); //geht nicht?
- // return ("SDI12345678910"); //geht nicht?
-//  return ("SDI123456789101112"); //geht nicht?
-  //result = "SDI123456789101112131415"; //geht
+//  result= ("SDI1234567"); //geht nicht?
+  //result= ("SDI12345678"); //geht nicht?
+ // result= ("SDI12345678910"); //geht nicht?
+//  result= ("SDI123456789101112"); //geht nicht?
+//  result = "SDI123456789101112131415"; //geht
 //  result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //geht
-  result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxaaaaaaaaaaafffff"; //geht
-
+//  result="dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxaaaaaaaaaaafffffaaaaaaaaaa"; //geht 
+  
   result = "\tSDI"+(String)i+"\t"+result; //add SDI-12-adress and field separators
-  Serial.print(result); //write results to console
+ 
+  Serial.print(result);   //write results to console
   dataFile.print(result); // write to file
   return(result.length()); //return length of string for later checking
   
