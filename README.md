@@ -30,7 +30,7 @@ Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time s
 - upload and run!	
 
 ## Hardware required
-- tested with Arduino Uno, rev. 3 and Pro Micro
+- tested with Arduino Uno, rev. 3, Pro Micro, Nano (sleep mode not tested)
 - D3231 real time clock, SD-card slot (or both combined in a Shield, e.g. https:snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html [no longer produced] or Keyes Date logging Shield [reconstruction steps below])
 
 for wiring details, see below
@@ -48,18 +48,13 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
 ### RTC (when using Shield, only SWQ (between battery and SD-card slot) required)
 
- SD-card-pin ->  Arduino-pin Uno (Pro Micro)
- 
- Vin -> 5 V (Vcc)
- 
- GND -> GND
- 
- SCL -> Analog 5 (3)
- 
- SDA -> Analog 4 (2)
- 
- SQW -> pin (default: 2 on Uno, 7 on Pro Micro)  (optional, required only when using sleep mode)
-
+ SD-card-pin | Ardu. Uno | Pro Micro | Nano
+ Vin         | 5 V       | Vcc       | 5 V
+ GND         | GND       | GND       | GND       
+ SCL         | A 5       | A 3       | A 5
+ SDA         | A 4       | A 2       | A 4
+ SQW         | D 2       | D 7       | ?
+ (SQW optional, required only when using sleep mode)
 
 ### SD card (no wiring required when using Shield)
 
