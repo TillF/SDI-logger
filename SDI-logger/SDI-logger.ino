@@ -4,7 +4,7 @@
 //see instructions at https://github.com/TillF/SDI-logger
 #define ver_string "1.30"
 #include "setup_general.h" //adjust your board settings in this file
-#include "setup_sdi.h" //include this if you want to use an event counter
+#include "setup_sdi.h"     //include this if you want to use SDI-12-devices
 
 // Begin code section - no user changes required below (sic!)
 
