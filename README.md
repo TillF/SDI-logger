@@ -48,27 +48,32 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
 ### RTC (when using Shield, only SWQ (between battery and SD-card slot) required)
 
- SD-card-pin | Ardu. Uno | Pro Micro | Nano
- Vin         | 5 V       | Vcc       | 5 V
- GND         | GND       | GND       | GND       
- SCL         | A 5       | A 3       | A 5
- SDA         | A 4       | A 2       | A 4
- SQW         | D 2       | D 7       | ?
+| SD-card-pin | Ardu. Uno | Pro Micro | Nano |
+| :---------- | :-------: | --------: |----: |
+| Vin         | 5 V       | Vcc       | 5 V  |
+| GND         | GND       | GND       | GND  |     
+| SCL         | A 5       | A 3       | A 5  |
+| SDA         | A 4       | A 2       | A 4  |
+| SQW         | D 2       | D 7       | ?    |
+
  (SQW optional, required only when using sleep mode)
 
 ### SD card (no wiring required when using Shield)
 
- SD-card-pin ->  Arduino-Uno-pin (Pro Micro)
+| SD-card-pin | Uno, Nano | Pro Micro |
+| :---------- | :-------:  | --------: |
+| MOSI        | D 11       | D 16      |
+| MISO        | D 12       | D 14      |     
+| CLK (or SLK)| D 13       | D 15      |
+| CS          | D 10*      | D 10*     |
  
- MOSI -> pin D11 (16)
- 
- MISO -> pin D12 (14)
- 
- CLK (or SLK) -> pin D13 (15)
- 
- CS -> pin "chipSelect"(default: D10 )
- 
+*pin "chipSelect"(default: D10 ), change this to match your SD shield or module:
+* Arduino Ethernet shield: pin 4
+* Adafruit SD shields and modules: pin 10
+* Sparkfun SD shield: pin 8
+* MKRZero SD: SDCARD_SS_PIN
 
+ 
 ### SDI-12 (multiple SDI-12 devices supported but not yet tested)
 
  SDI-device ->  Arduino-Uno-pin (Pro Micro)
