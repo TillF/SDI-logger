@@ -143,24 +143,18 @@ int read_sdi(char i, File dataFile){
     dataOption++; //read the next "D-channel" during the next loop
   }
   mySDI12.clearBuffer();
- //   result= ("SDIy"); //geht
-//  result= ("SDI1234"); //geht?
-//  result= ("SDI12345"); //geht?
-// result = "SDI123456"; //geht 
-//  result= ("SDI1234567"); //geht
-  //result= ("SDI12345678"); //geht nicht?
- // result= ("SDI12345678910"); //geht nicht?
-//  result= ("SDI123456789101112"); //geht nicht?
-//  result = "SDI123456789101112131415"; //geht?
-  result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //geht
-//  result="dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxaaaaaaaaaaafffffaaaaaaaaaa"; //geht 
+ // result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //geht
+ // result="dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxaaaaaaaaaaafffffaaaaaaaaaa"; //geht nicht
   
-  result = "\tSDI"+(String)i+"\t"+result; //add SDI-12-adress and field separators
+ // result = "\tSDI"+(String)i+"\t"+result; //add SDI-12-adress and field separators
+  temp_str = "\tSDI"+(String)i+"\t"; //add SDI-12-adress and field separators
+//  result = temp_str+result; //add SDI-12-adress and field separators
  
+  Serial.print(temp_str);   //write results to console
   Serial.print(result);   //write results to console
+  dataFile.print(temp_str); // write to file
   dataFile.print(result); // write to file
   return(result.length()); //return length of string for later checking
-  
 }
 
 int read_all_SDI(File dataFile) //read all SDI specified in list
