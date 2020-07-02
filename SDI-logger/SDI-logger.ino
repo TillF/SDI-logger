@@ -345,22 +345,15 @@ void loop() { //this function is called repeatedly as long as the arduino is run
     now = RTC.now();
    //Serial.println("7");Serial.flush(); 
 
-    sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
-    // make a string for assembling the data to log:
-   //String output_string = (String)DateAndTimeString;
-   
-   //Serial.print(F("string to log:"));Serial.println((String)output_string); 
-   dataFile.print(DateAndTimeString); //write to file
+   sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
+  
    Serial.print(F("logged:"));
+   dataFile.print(DateAndTimeString); //write to file
    Serial.print(DateAndTimeString);
    
    read_sensors(dataFile); //measure and read data from sensor 
-   //dataFile.println(output_string); //write to file
-   //Serial.println(output_string);
    dataFile.println(); //next line in file
-    dataFile.close();
-    // print to the serial port too:
-   
+   dataFile.close();
   }
   // if the file isn't open, pop up an error:
   else {

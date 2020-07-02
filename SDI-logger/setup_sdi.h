@@ -147,12 +147,12 @@ int read_sdi(char i, File dataFile){
 //  result= ("SDI1234"); //geht?
 //  result= ("SDI12345"); //geht?
 // result = "SDI123456"; //geht 
-  result= ("SDI1234567"); //geht nicht?
+//  result= ("SDI1234567"); //geht
   //result= ("SDI12345678"); //geht nicht?
  // result= ("SDI12345678910"); //geht nicht?
 //  result= ("SDI123456789101112"); //geht nicht?
 //  result = "SDI123456789101112131415"; //geht?
-//  result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //geht
+  result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //geht
 //  result="dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxaaaaaaaaaaafffffaaaaaaaaaa"; //geht 
   
   result = "\tSDI"+(String)i+"\t"+result; //add SDI-12-adress and field separators
