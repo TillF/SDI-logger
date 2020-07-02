@@ -2,28 +2,11 @@
 //Till Francke, 2020
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string "1.30"
+#define ver_string "1.31"
 #include "setup_general.h" //adjust your board settings in this file
 #include "setup_sdi.h"     //include this if you want to use SDI-12-devices
 
 // Begin code section - no user changes required below (sic!)
-
-//for SD-card
-#include <SPI.h>
-#include <SD.h>
-
-// clock
-#include <DS3231.h> // https://github.com/NorthernWidget/DS3231; delete any existing "DS3231"-library to avoid conflicts!!
-#include <Wire.h>
-RTClib RTC;
-DateTime now;
-
-//sleep mode
-#include <LowPower.h> // https://github.com/rocketscream/Low-Power V1.8
-
-//for reading logger ID from EEPROM
-#include <EEPROM.h>
-
 //String logfile_name="";
 char logfile_name[12]="";
 
@@ -122,16 +105,16 @@ void setup() { //this function is run once on power-up
 }
 
 
-String read_sensors()
+String read_sensors(File dataFile)
 {
  String output_string;
- output_string += read_all_SDI();
- if (output_string=="") //no data from sensor
+ int char_counter = read_all_SDI(dataFile); //read SDI and write to file
+ if (char_counter==0) //no data from sensor
      error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
   
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
   output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
-  //Serial.println("V"+output_string);
+  Serial.println("\t"+output_string);
  return(output_string);
 }
 
@@ -348,37 +331,34 @@ void wakeUp() {
 }
 
 void loop() { //this function is called repeatedly as long as the arduino is running
-  //Serial.println("6");Serial.flush(); 
- 
-  char DateAndTimeString[22]; //19 digits plus the null char
   
-  // make a string for assembling the data to log:
-  String output_string = "";
-  
-// assemble timestamp 
-
-  now = RTC.now();
- //Serial.println("7");Serial.flush(); 
- 
- sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
-  output_string = (String)DateAndTimeString;
- 
-  output_string += read_sensors(); //measure and read data from sensor 
-  
-  //Serial.print(F("string to log:"));Serial.println((String)output_string); 
- 
   setup_sdcard(3); //re-initialize the SD-card in case it has been removed
   File dataFile = SD.open(logfile_name, FILE_WRITE);
-
  
   // if the file is available, write to it:
   if (dataFile) 
   {
-    dataFile.println(output_string);
+    char DateAndTimeString[22]; //19 digits plus the null char
+    // assemble timestamp 
+    now = RTC.now();
+   //Serial.println("7");Serial.flush(); 
+
+    sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
+    // make a string for assembling the data to log:
+   String output_string = (String)DateAndTimeString;
+   
+   //Serial.print(F("string to log:"));Serial.println((String)output_string); 
+   dataFile.print(output_string); //write to file
+   Serial.print(F("logged:"));
+   Serial.print(output_string);
+   
+   output_string = read_sensors(dataFile); //measure and read data from sensor 
+   dataFile.println(output_string); //write to file
+   Serial.println(output_string);
+   
     dataFile.close();
     // print to the serial port too:
-    Serial.print(F("logged:"));
-    Serial.println(output_string);
+   
   }
   // if the file isn't open, pop up an error:
   else {

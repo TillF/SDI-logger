@@ -8,7 +8,8 @@
 #endif
   
 #define POWER_PIN -1       // The sensor power pin (or -1, if not switching power)
-const char sdi_addresses[] = { '0', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
+//const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
+const char sdi_addresses[] = "0123456789ABCDE"; //list of IDs of attached SDI-sensors (single-character IDs only!)
 
 //for SDI-12 sensor
 #include <SDI12.h>
@@ -72,8 +73,8 @@ int count_values(String sdi_string) //return number of values in String by count
   return(tab_counter);
 }
 
-String read_sdi(char i){
-  //Serial.print(F("reading from")+(String)i);
+int read_sdi(char i, File dataFile){
+   //Serial.print(F("reading from")+(String)i);
 
   String temp_str = "";  //generate command
   temp_str += i;
@@ -83,7 +84,7 @@ String read_sdi(char i){
   delay(30);
   //Serial.println(temp_str); //rr
   
-  // wait for acknowlegement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
+  // wait for acknowledgement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
   temp_str = "";
   char c;
   delay(30);
@@ -99,7 +100,6 @@ String read_sdi(char i){
   mySDI12.clearBuffer();
 
   //Serial.println(F("response: ")+sdiResponse);
- 
 
   // find out how long we have to wait (in seconds).
   uint8_t wait = 0;
@@ -126,16 +126,18 @@ String read_sdi(char i){
 
   // iterate through all D-options until the expected number of values have been obtained
   String result="";
+
   uint8_t dataOption=0; //number of "D-channel" to access/iterate
   while(dataOption < 10)
   {
-    temp_str = "";
-    temp_str += i;
+    //temp_str = "";
+    temp_str = (String)i;
     temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
     mySDI12.sendCommand(temp_str);
   //Serial.println(F("request data "));
+    Serial.println(temp_str);
     while(!mySDI12.available()>1); // wait for acknowlegement
-    delay(300); // let the data transfer
+    delay(300); // let the data transfer ii: reduce?
     result += readSDIBuffer();
     //Serial.println("data:"+(String)dataOption+":"+(String)result);
     //Serial.println("count:"+(String)count_values(result));
@@ -143,17 +145,31 @@ String read_sdi(char i){
     dataOption++; //read the next "D-channel" during the next loop
   }
   mySDI12.clearBuffer();
-  return(result);
+  //  return ("SDI1"); //geht
+//  return ("SDI1234"); //geht?
+//  return ("SDI12345"); //geht?
+// result = "SDI123456"; //geht 
+//  return ("SDI1234567"); //geht nicht?
+  //return ("SDI12345678"); //geht nicht?
+ // return ("SDI12345678910"); //geht nicht?
+//  return ("SDI123456789101112"); //geht nicht?
+  //result = "SDI123456789101112131415"; //geht
+//  result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //geht
+  result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxaaaaaaaaaaafffff"; //geht
+
+  result = "\tSDI"+(String)i+"\t"+result; //add SDI-12-adress and field separators
+  Serial.print(result); //write results to console
+  dataFile.print(result); // write to file
+  return(result.length()); //return length of string for later checking
   
 }
 
-String read_all_SDI() //read all SDI specified in list
+int read_all_SDI(File dataFile) //read all SDI specified in list
 {
-  String output_string;
+  int char_counter;
   for (byte i=0; i < strlen(sdi_addresses); i++)
   {
-     if (i > 0) output_string += "\t"; //add field separator
-     output_string += read_sdi(sdi_addresses[i]);     // read SDI sensor
+    char_counter += read_sdi(sdi_addresses[i], dataFile);     // read SDI sensor and write to file, count number of characters written
   }   
-  return(output_string);
+  return(char_counter);
 }
