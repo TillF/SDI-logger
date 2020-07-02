@@ -115,7 +115,7 @@ Both wires still use the connector plugs, but could likewise also be soldered di
 
 ## FAQs
 ### Arduino gets stuck after message "going 2 sleep"
-- Some boards (e.g. Pro Micro) do no reconnect USB after sleep mode. The logger may still be running fine. Verify this by checking the status LED or the records on the SC-card.
+- Some boards (e.g. Pro Micro) do no reconnect USB after sleep mode. The logger may still be running fine. Verify this by checking the status LED or the records on the SD-card.
 
 - Unfortunately, sleep mode is not supported by all chips. Disable it by setting AWAKE_TIME to a value greater than INTERVAL to disable sleeping.
 
@@ -127,12 +127,14 @@ Appears erratically. Try:
 
 - format SD-card
 
-- check data of RTC: if the date is wrong, an illegal filename is generated 
+- check data of RTC: if the date is wrong, an invalid filename is generated 
 
-### Power consumption (main board only, no peripherals)
-awake / asleep:
-Uno: ~ 55 mA / 37 mA
-Pro Micro 11 mA / 1.4 mA
+### Power consumption (main board only, no peripherals, powered via voltage regulator)
+| Arduino    | awake [mA] | asleep [mA]|
+| :--------- | :-------:  | --------: |
+| UNO        | 55       | 37      |
+| Pro Micro  | 11       | 1.4      |     
+| Nano       | ?       | ?      |     
 
 
 ## Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
