@@ -347,10 +347,10 @@ void loop() { //this function is called repeatedly as long as the arduino is run
 
     sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
     // make a string for assembling the data to log:
-   String output_string = (String)DateAndTimeString;
+   //String output_string = (String)DateAndTimeString;
    
    //Serial.print(F("string to log:"));Serial.println((String)output_string); 
-   dataFile.print(output_string); //write to file
+   dataFile.print(DateAndTimeString); //write to file
    Serial.print(F("logged:"));
    Serial.print(DateAndTimeString);
    
