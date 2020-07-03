@@ -1,6 +1,7 @@
-//initialize and read SDI-device
-//for SDI-12 sensor
-#if board==uno 
+//settings for SDI-12 devices
+
+// Begin settings -------------------------------------------------
+#if board==uno | board==nano 
   #define DATA_PIN 7         // The pin of the SDI-12 data bus (UNO: 7; Pro Micro: 8)
 #endif
 #if board==promicro 
@@ -9,10 +10,15 @@
   
 #define POWER_PIN -1       // The sensor power pin (or -1, if not switching power)
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
-const char sdi_addresses[] = "0123456789ABCDE"; //list of IDs of attached SDI-sensors (single-character IDs only!)
+//const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!)
+const char sdi_addresses[] = "0"; //list of IDs of attached SDI-sensors (single-character IDs only!)
 
-//for SDI-12 sensor
-#include <SDI12.h>
+#define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
+
+// end settings --------------------------------------------------------
+
+#include <SDI12.h> //SDI-12 library
+
 SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
 
 String readSDIBuffer(){
@@ -143,8 +149,9 @@ int read_sdi(char i, File dataFile){
     dataOption++; //read the next "D-channel" during the next loop
   }
   mySDI12.clearBuffer();
- // result="SDI dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; //geht
- // result="dummyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxaaaaaaaaaaafffffaaaaaaaaaa"; //geht nicht
+#if WRITE_NA==1 
+  if (result =="") result="NA"; //in case of no data from sensor, wirte "NA"
+#endif
   
  // result = "\tSDI"+(String)i+"\t"+result; //add SDI-12-adress and field separators
   temp_str = "\tSDI"+(String)i+"\t"; //add SDI-12-adress and field separators

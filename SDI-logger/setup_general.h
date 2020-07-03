@@ -3,8 +3,8 @@
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port (only relevant when connected to computer)
 
 //time settings
-#define INTERVAL 3 //interval between measurements [sec]. Must result in an integer number of intervals per day.
-#define AWAKE_TIME 3 //time for being awake before and after actual measurement [sec].
+#define INTERVAL 4 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define AWAKE_TIME 4 //time for being awake before and after actual measurement [sec].
 
 //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 #define HOUR_START 0   
@@ -15,7 +15,8 @@
 //Arduino board for easier access of the configurations
 #define uno 1
 #define promicro 2
-#define board promicro //choose "uno" or "promicro"
+#define nano 3
+#define board nano //choose "uno", "promicro" or "nano"
 
 #define chipSelect 10  //pin used by SD-card slot. default: 10
 // change this to match your SD shield or module;
@@ -25,7 +26,7 @@
 // MKRZero SD: SDCARD_SS_PIN
 
 // pin settings
-#if board==uno 
+#if board==uno | board==nano 
   //for SD-card
   #define wakeUpPin 2 // Interrupt Pin used by RTC (should be 2 on UNO, 7 on Pro Micro) 
   #define messagePin 3 // (optional) pin for connecting LED indicating messages (UNO: 3, don't use 0 or 1 when connected to USB; Pro Micro: 17)
