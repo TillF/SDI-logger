@@ -152,14 +152,16 @@ Appears erratically. Try:
 - check if the voltage of the SD-card module is sufficient (it may require 5 instead of 3 V)
 
 ### Power consumption 
-| Arduino    | awake [mA] | reading [mA] | asleep [mA]  | peripherals | connected via |
-| :--------- | :--:       | :-------:    | :---------:  | :--------:  | ------------: |
-| UNO        | 55         | ?            | 37           | none        | coax jack     |
-| Pro Micro  | 11         | ?            | 1.4          | none        | Vcc           |
-| Nano       | 41         | 74           | 35           | 12 x SMT100 | +5V pin*      |
-| Nano       | 19         | 24           | 8            | none        | +5V pin*      |
-| Nano       | 28         | 64           | 22           | 12 x SMT100 | Vin pin       |
-| Nano       | 13         | 16           | 6            | none        | Vin pin       |
+| Arduino    | awake [mA] | reading [mA] | asleep [mA]  | peripherals        | connected via |
+| :--------- | :--:       | :-------:    | :---------:  | :--------:         | ------------: |
+| UNO        | 55         | ?            | 37           | none               | coax jack     |
+| Pro Micro  | 11         | ?            | 1.4          | none               | Vcc           |
+| Nano       | 41         | 74           | 35           | 12xSMT100, on      | +5V pin*      |
+| Nano       | 19         | 24           | 8            | none               | +5V pin*      |
+| Nano       | 28         | 64           | 22           | 12xSMT100, on      | Vin pin       |
+| Nano       | 13         | 16           | 6            | none               | Vin pin       |
+| Nano       | 19         | 74           | 8            | 12xSMT100, switched | +5V pin*     |
+| Nano       | 13         | 74           | 6            | 12xSMT100, switched | Vin pin*     |
 
 \* strange, but true: the Nano drew more current when powered via +5V pin than via Vin.
 
