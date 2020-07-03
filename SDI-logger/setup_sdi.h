@@ -8,10 +8,9 @@
   #define DATA_PIN 8         // The pin of the SDI-12 data bus (UNO: 7; Pro Micro: 8)
 #endif
   
-#define POWER_PIN -1       // The sensor power pin (or -1, if not switching power)
+#define POWER_PIN 4       // The sensor power pin (or -1, if not switching power)
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
-//const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!)
-const char sdi_addresses[] = "0"; //list of IDs of attached SDI-sensors (single-character IDs only!)
+const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!)
 
 #define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
 
@@ -38,18 +37,22 @@ String readSDIBuffer(){
  return(buffer);
 }
 
+void sensor_power(byte onoff) //power the SDI devices
+{
+ if(POWER_PIN > 0){
+    Serial.println(F("power up sensors..."));
+    pinMode(POWER_PIN, OUTPUT);
+    digitalWrite(POWER_PIN, onoff);
+    delay(200);
+  } 
+}
 String setup_sdi(){
   Serial.print(F("Init SDI-12 bus..."));
   mySDI12.begin();
   delay(500); // allow things to settle
 
   // Power the sensors;
-  if(POWER_PIN > 0){
-    Serial.println(F("power up sensors..."));
-    pinMode(POWER_PIN, OUTPUT);
-    digitalWrite(POWER_PIN, HIGH);
-    delay(200);
-  }
+  sensor_power(1);
 
   String result="";
   char temp_str[4]="aI!\0"; // SDI-12 identification command format  [address]['I'][!]
@@ -153,9 +156,7 @@ int read_sdi(char i, File dataFile){
   if (result =="") result="NA"; //in case of no data from sensor, wirte "NA"
 #endif
   
- // result = "\tSDI"+(String)i+"\t"+result; //add SDI-12-adress and field separators
   temp_str = "\tSDI"+(String)i+"\t"; //add SDI-12-adress and field separators
-//  result = temp_str+result; //add SDI-12-adress and field separators
  
   Serial.print(temp_str);   //write results to console
   Serial.print(result);   //write results to console
@@ -171,5 +172,6 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
   {
     char_counter += read_sdi(sdi_addresses[i], dataFile);     // read SDI sensor and write to file, count number of characters written
   }   
-  return(char_counter);
+
+ return(char_counter);
 }

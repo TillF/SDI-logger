@@ -105,20 +105,21 @@ void setup() { //this function is run once on power-up
 }
 
 
-String read_sensors(File dataFile)
+void read_sensors(File dataFile)
 {
- String output_string;
- int char_counter = read_all_SDI(dataFile); //read SDI and write to file
+ //String output_string;
+  int char_counter = read_all_SDI(dataFile); //read SDI and write to file
  if (char_counter==0) //no data from sensor
      error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
   
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
   getVoltage(dataFile); //get internal voltage of board, may help detecting brownouts
-  Serial.println("\t"+output_string);
- return(output_string);
+  //Serial.println("\t"+output_string);
+ sensor_power(LOW); //power off the sensors, if enabled
+
 }
 
- int getVoltage(File dataFile) // Returns actual value of Vcc (x 100), i.e. internal voltage to processor (http://forum.arduino.cc/index.php?topic=88935.0)
+ void getVoltage(File dataFile) // Returns actual value of Vcc (x 100), i.e. internal voltage to processor (http://forum.arduino.cc/index.php?topic=88935.0)
     {
        
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -228,6 +229,7 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   sleep(time2next);
   
   //wait after sleep
+  sensor_power(HIGH); //power on the sensors, if enabled
   timestamp_curr = RTC.now().unixtime();
   //Serial.print(F("Current timestamp:" ));
   //Serial.println(timestamp_curr);
@@ -240,7 +242,7 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
 
 void wait(long interval) //wait for the requested number of secs while still showing output/LED-activity at certain times
 {
-  const int blink_interval = 2000; //blink LED every nn msecs. Should be a multiple of "interval"
+  const int blink_interval = 1000; //blink LED every nn msecs. Should be a multiple of "interval"
   int led_state=HIGH;
   
   for(long i=interval*1000; i >= 0; i -= blink_interval)
@@ -259,6 +261,7 @@ void wait(long interval) //wait for the requested number of secs while still sho
 void sleep(long time2sleep)
 {
   byte t=LOW; //rr
+  digitalWrite(messagePin, LOW); //switch off light while sleeping
   if (time2sleep < 1) return; //no short naps!
   DS3231 Clock; 
 
