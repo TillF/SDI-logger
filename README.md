@@ -74,7 +74,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 * MKRZero SD: SDCARD_SS_PIN
 
  
-### SDI-12 (multiple SDI-12 devices supported but not yet tested)
+### SDI-12 (multiple SDI-12 devices supported)
 
  SDI-device ->  Arduino-Uno-pin (Pro Micro)
  
@@ -86,7 +86,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  
  e.g. 
  
- Truebner SMC: data: green; ground: white; V+: brown
+ Truebner SMT100: data: green; ground: white; V+: brown
  
  delta_T PR2: data: black; ground: blue; V+: white (needs external 12 V)
  
