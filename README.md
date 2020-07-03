@@ -149,12 +149,19 @@ Appears erratically. Try:
 
 - check data of RTC: if the date is wrong, an invalid filename is generated 
 
-### Power consumption (main board only, no peripherals, powered via voltage regulator)
-| Arduino    | awake [mA] | asleep [mA]|
-| :--------- | :-------:  | --------: |
-| UNO        | 55       | 37      |
-| Pro Micro  | 11       | 1.4      |     
-| Nano       | ?       | ?      |     
+- check if the voltage of the SD-card module is sufficient (it may require 5 instead of 3 V)
+
+### Power consumption 
+| Arduino    | awake [mA] | reading [mA] | asleep [mA]  | peripherals | connected via |
+| :--------- | :--:       | :-------:    | :---------:  | :--------:  | ------------: |
+| UNO        | 55         | ?            | 37           | none        | coax jack     |
+| Pro Micro  | 11         | ?            | 1.4          | none        | Vcc           |
+| Nano       | 41         | 74           | 35           | 12 x SMT100 | +5V pin*      |
+| Nano       | 19         | 24           | 8            | none        | +5V pin*      |
+| Nano       | 28         | 64           | 22           | 12 x SMT100 | Vin pin       |
+| Nano       | 13         | 16           | 6            | none        | Vin pin       |
+
+\* strange, but true: the Nano drew more current when powered via +5V pin than via Vin.
 
 ### SDI-12 device not returning any or corrupted data <a name="SDI12_length"> </a> 
 SDI-12-devices which return long data strings (e.g. many values returned in one measurement) may cause memory issues. These can cause corrupted or no data being returned or other unexpected behaviour. As of ver. 1.31, return strings of at least 72 chars per device seem to be ok.
