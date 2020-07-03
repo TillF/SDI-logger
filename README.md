@@ -1,7 +1,24 @@
 # SDI-logger
-Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time stamp.
+Arduino-based data logger for logging SDI-12 (and other) sensor data to SD-card with RTC-time stamp. [ÁLog](https://github.com/NorthernWidget/ALog) may be a more advance alternative you could also check out.
 
-## Features
+Contents:
+
+[Features](#features)
+
+[Usage](#usage)
+
+[Hardware required](#hardware)
+
+[Software required](#software)
+
+[Wiring](#wiring)
+
+[FAQs](#faqs)
+
+[Tweaking Shields](#tweaking)
+
+
+## Features <a name="features"> </a> 
 - requires low-cost hardware (starting from 10 € [2019], excluding power supply, SD-card and casing)
 - data logging to SD-card
 - use of low-drift clock (D3231)
@@ -16,26 +33,27 @@ Arduino-based data logger for logging SDI-sensor data to SD-card with RTC-time s
 - optional logging of (pseudo-)voltage at controler for brownout-detection
 
 
-## Usage
+## Usage <a name="usage"> </a> 
 - install hardware required (see "Hardware required" and "Wiring")
 - install libraries (see "Software required")
 - verify/set clock using separate script (e.g. ```set_clock.ino```)
 - verify/set logger-id using separate script (e.g. ```set_id.ino```)
 - adjust settings 
 	- ```setup_general.h``` (general settings)
+	- ```setup_sdi.h``` (when using SDI-12 devices)
 	- ```setup_event.h``` (when using the event logger)
 	- ```setup_imu.h``` (when using IMU)
 - enable/disable required header files in ```SDI-logger.ino```
 - enable/disable reading of required sensors in ```read_sensors()``` in ```SDI-logger.ino```
 - upload and run!	
 
-## Hardware required
+## Hardware required<a name="hardware"> </a> 
 - tested with Arduino Uno, rev. 3, Pro Micro, Nano (sleep mode not tested)
 - D3231 real time clock, SD-card slot (or both combined in a Shield, e.g. https:snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html [no longer produced] or Keyes Date logging Shield [reconstruction steps below])
 
 for wiring details, see below
 
-## Software required:
+## Software required <a name="software"> </a> 
 Please install additional libraries via "Tools" -> "Manage Libraries" or download and extract libraries to c:\Program Files (x86)\Arduino\libraries\
 
  SDI: https://github.com/EnviroDIY/Arduino-SDI-12 (tested: 29 Oct 2018)
@@ -44,7 +62,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  
  sleep mode: https://github.com/rocketscream/Low-Power (tested: V1.81)
 
-## Wiring
+## Wiring <a name="wiring"> </a> 
 
 ### RTC (when using Shield, only SWQ (between battery and SD-card slot) required)
 
@@ -58,7 +76,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
  (SQW optional, required only when using sleep mode)
 
-### SD card (no wiring required when using Shield)
+### SD-card (no wiring required when using Shield)
 
 | SD-card-pin | Uno, Nano | Pro Micro |
 | :---------- | :-------:  | --------: |
@@ -76,11 +94,13 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
  
 ### SDI-12 (multiple SDI-12 devices supported)
 
+ For devices returning long data strings, please note [this advice](#SDI12_length).
+ 
  SDI-device ->  Arduino-Uno-pin (Pro Micro)
  
  GND -> GND
  
- +Vbat -> 5 V (if the external device needs more than 5 V, connect it to external battery instead of the Arduino-pin)
+ +Vbat -> 5 V (if the external device needs more than 5 V or exceeds the current that can be provided by the Arduino, connect it to external battery instead of the Arduino-pin)
  
  SDI-12 Data -> pin D7 (8) 
  
@@ -113,7 +133,7 @@ An Arduino Uno equipped with a Snootlab Shield. Pin D2 has been connected to a w
 
 Both wires still use the connector plugs, but could likewise also be soldered directly to the contact line on the shield.
 
-## FAQs
+## FAQs <a name="faqs"> </a> 
 ### Arduino gets stuck after message "going 2 sleep"
 - Some boards (e.g. Pro Micro) do no reconnect USB after sleep mode. The logger may still be running fine. Verify this by checking the status LED or the records on the SD-card.
 
@@ -136,8 +156,12 @@ Appears erratically. Try:
 | Pro Micro  | 11       | 1.4      |     
 | Nano       | ?       | ?      |     
 
+### SDI-12 device not returning any or corrupted data <a name="SDI12_length"> </a> 
+SDI-12-devices which return long data strings (e.g. many values returned in one measurement) may cause memory issues. These can cause corrupted or no data being returned or other unexpected behaviour. As of ver. 1.31, return strings of at least 72 chars per device seem to be ok.
 
-## Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
+
+## Tweaking shields <a name="tweaking"> </a> 
+### Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
 
 - aim: replace poor DS1307 RTC with DS3231, use power LED as message LED
 
