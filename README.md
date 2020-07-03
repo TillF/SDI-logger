@@ -168,6 +168,8 @@ Appears erratically. Try:
 ### SDI-12 device not returning any or corrupted data <a name="SDI12_length"> </a> 
 SDI-12-devices which return long data strings (e.g. many values returned in one measurement) may cause memory issues. These can cause corrupted or no data being returned or other unexpected behaviour. As of ver. 1.31, return strings of at least 72 chars per device seem to be ok.
 
+### SDI-12 device not returning any or zero data 
+When using power switching (POWER_PIN), the warmup time may be to short. Increase AWAKE_TIME.
 
 ## Tweaking shields <a name="tweaking"> </a> 
 ### Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
