@@ -2,7 +2,7 @@
 //Till Francke, 2020
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string "1.32"
+#define ver_string F("1.33")
 #include "setup_general.h" //adjust your board settings in this file
 #include "setup_sdi.h"     //include this if you want to use SDI-12-devices
 
@@ -92,6 +92,7 @@ void setup() { //this function is run once on power-up
     digitalWrite(messagePin, LOW);
   }  
 
+  Serial.println(ver_string);
   if (wakeUpPin !=0)  //wakeUpPin pin, if present
   {
     pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
@@ -247,7 +248,7 @@ void wait(long interval) //wait for the requested number of secs while still sho
   
   for(long i=interval*1000; i >= 0; i -= blink_interval)
   {
-    Serial.print(F("reading in "));
+    Serial.print(F("wait for "));
     Serial.println(String(i/1000) +" s"); 
     if (messagePin !=0)
     {
@@ -260,7 +261,7 @@ void wait(long interval) //wait for the requested number of secs while still sho
 
 void sleep(long time2sleep)
 {
-  byte t=LOW; //rr
+  //byte t=LOW; //rr
   digitalWrite(messagePin, LOW); //switch off light while sleeping
   if (time2sleep < 1) return; //no short naps!
   DS3231 Clock; 

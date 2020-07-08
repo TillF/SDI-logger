@@ -40,19 +40,18 @@ String readSDIBuffer(){
 void sensor_power(byte onoff) //power the SDI devices
 {
  if(POWER_PIN > 0){
-    Serial.println(F("power up sensors..."));
+    Serial.print(F("sensor power: "));
+    Serial.println(onoff);
     pinMode(POWER_PIN, OUTPUT);
     digitalWrite(POWER_PIN, onoff);
     delay(200);
   } 
 }
 String setup_sdi(){
+  sensor_power(1); // Power the sensors;
   Serial.print(F("Init SDI-12 bus..."));
   mySDI12.begin();
   delay(500); // allow things to settle
-
-  // Power the sensors;
-  sensor_power(1);
 
   String result="";
   char temp_str[4]="aI!\0"; // SDI-12 identification command format  [address]['I'][!]
@@ -152,8 +151,10 @@ int read_sdi(char i, File dataFile){
     dataOption++; //read the next "D-channel" during the next loop
   }
   mySDI12.clearBuffer();
+
+  //result= "zxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy"; //for testing
 #if WRITE_NA==1 
-  if (result =="") result="NA"; //in case of no data from sensor, wirte "NA"
+  if (result =="") result="NA"; //in case of no data from sensor, write "NA"
 #endif
   
   temp_str = "\tSDI"+(String)i+"\t"; //add SDI-12-adress and field separators
