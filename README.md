@@ -1,5 +1,5 @@
 # SDI-logger
-Arduino-based data logger for logging SDI-12 (and other) sensor data to SD-card with RTC-time stamp. [ÁLog](https://github.com/NorthernWidget/ALog) may be a more advance alternative you could also check out.
+Arduino-based data logger for logging SDI-12 (and other) sensor data to SD-card with RTC-time stamp. [ALog](https://github.com/NorthernWidget/ALog) may be a more advanced alternative you could also check out.
 
 Contents:
 
@@ -96,13 +96,15 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
  For devices returning long data strings, please note [this advice](#SDI12_length).
  
- SDI-device ->  Arduino-Uno-pin (Pro Micro)
+| SDI-device  | Uno, Nano | Pro Micro |
+| :---------- | :-------: | --------: |
+| GND         | GND       | GND       |
+| +Vbat \*    | 5 V  **   | 5 V **    |    
+| SDI-12 data | D 7       | D 8       |    
  
- GND -> GND
+ \* if the external device needs more than 5 V or exceeds the current that can be provided by the Arduino, connect it to external battery instead of the Arduino-pin).
  
- +Vbat -> 5 V (if the external device needs more than 5 V or exceeds the current that can be provided by the Arduino, connect it to external battery instead of the Arduino-pin)
- 
- SDI-12 Data -> pin D7 (8) 
+ ** if you want to switch off the power inbetween measurements, use the pin specified as POWER_PIN
  
  e.g. 
  
