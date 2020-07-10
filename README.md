@@ -153,6 +153,8 @@ Appears erratically. Try:
 
 - check if the voltage of the SD-card module is sufficient (it may require 5 instead of 3 V)
 
+- upload the Arduino sketch with another computer - once, this really fixed the problem for us
+
 ### Power consumption 
 | Arduino    | awake [mA] | reading [mA] | asleep [mA]  | peripherals        | connected via |
 | :--------- | :--:       | :-------:    | :---------:  | :--------:         | ------------: |
