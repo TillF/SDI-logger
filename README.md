@@ -175,6 +175,9 @@ SDI-12-devices which return long data strings (e.g. many values returned in one 
 ### SDI-12 device not returning any or zero data 
 When using power switching (POWER_PIN), the warmup time may be to short. Increase AWAKE_TIME.
 
+### Logger recording at irregular intervals, irrespective of interval settings 
+We found this behaviour with one particular computer and IDE. When uploading the same scripts from another computer, everything worked correctly. Re-installing the IDE also solved this problem.
+
 ## Tweaking shields <a name="tweaking"> </a> 
 ### Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
 
