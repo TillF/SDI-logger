@@ -175,8 +175,12 @@ To get some general idea, here are some of our measurements:
 | Nano LEDs off, RTC1 |?  | ~62          | 4.2          | yes, LEDs off    |12xSMT100, switched | Vin pin      | 5
 | Nano2 LEDs off, RTC2 |? | ~62          | 18.8         | yes, LEDs off    |12xSMT100, switched | Vin pin      | 5
 | Nano2 LEDs, USB off, RTC2 |? | ~62     |  8.8         | yes, LEDs off    |12xSMT100, switched | Vin pin      | 5
+| UNO³       | ?          | ?            | 25           | yes               | PR2               | coax jack    | 12
+| UNO³, LEDs off | ?          | ?        | 18.8     | yes, LEDs off     | PR2               | coax jack    | 12
+| UNO³, LEDs, USB off | ?          | ?   | 7.8     | yes, LEDs off     | PR2               | coax jack    | 12
 
 ² highly fluctuating
+³ manufacturer: Himalaya
 
 \* strange, but true: the Nano drew more current when powered via +5V pin than via Vin.
 
