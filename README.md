@@ -153,7 +153,7 @@ Appears erratically. Try:
 
 ### Power consumption
 Different Arduino boards vary greatly in power consumption, even within the same type of Arduino. Furthermore, attached peripherals have an influence, again, varying between manufacturers.
-Generally, the Uno is not the best choice for power saving, but even the Uno can be tweaked to considerably lower consumption with some soldering (disable LEDs and USB-chip, see [these instructions advice](https://www.defproc.co.uk/tutorial/how-to-reduce-arduino-uno-power-usage-by-95/).
+Generally, the Uno is not the best choice for power saving, but even the Uno can be tweaked to considerably lower consumption with some soldering (disable LEDs and USB-chip, see [these instructions ](https://www.defproc.co.uk/tutorial/how-to-reduce-arduino-uno-power-usage-by-95/)).
 To get some general idea, here are some of our measurements:
 | Arduino    | awake [mA] | reading² [mA] | asleep [mA]  | shield | peripherals        | connected via | voltage [V] |
 | :--------- | :--:       | :-------:    | :---------:  | :----: | :--------:         | :-----------: | ------------:
@@ -177,6 +177,7 @@ To get some general idea, here are some of our measurements:
 | Nano2 LEDs, USB off, RTC2 |? | ~62     |  8.8         | yes, LEDs off    |12xSMT100, switched | Vin pin      | 5
 
 ² highly fluctuating
+
 \* strange, but true: the Nano drew more current when powered via +5V pin than via Vin.
 
 ### SDI-12 device not returning any or corrupted data <a name="SDI12_length"> </a> 
