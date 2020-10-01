@@ -151,18 +151,32 @@ Appears erratically. Try:
 
 - check if the voltage of the SD-card module is sufficient (it may require 5 instead of 3 V)
 
-### Power consumption 
-| Arduino    | awake [mA] | reading [mA] | asleep [mA]  | peripherals        | connected via |
-| :--------- | :--:       | :-------:    | :---------:  | :--------:         | ------------: |
-| UNO        | 55         | ?            | 37           | none               | coax jack     |
-| Pro Micro  | 11         | ?            | 1.4          | none               | Vcc           |
-| Nano       | 41         | 74           | 35           | 12xSMT100, on      | +5V pin*      |
-| Nano       | 19         | 24           | 8            | none               | +5V pin*      |
-| Nano       | 28         | 64           | 22           | 12xSMT100, on      | Vin pin       |
-| Nano       | 13         | 16           | 6            | none               | Vin pin       |
-| Nano       | 19         | 74           | 8            | 12xSMT100, switched | +5V pin*     |
-| Nano       | 13         | 74           | 6            | 12xSMT100, switched | Vin pin*     |
+### Power consumption
+Different Arduino boards vary greatly in power consumption, even within the same type of Arduino. Furthermore, attached peripherals have an influence, again, varying between manufacturers.
+Generally, the Uno is not the best choice for power saving, but even the Uno can be tweaked to considerably lower consumption with some soldering (disable LEDs and USB-chip, see [these instructions advice](https://www.defproc.co.uk/tutorial/how-to-reduce-arduino-uno-power-usage-by-95/).
+To get some general idea, here are some of our measurements:
+| Arduino    | awake [mA] | reading² [mA] | asleep [mA]  | shield | peripherals        | connected via | voltage [V] |
+| :--------- | :--:       | :-------:    | :---------:  | :----: | :--------:         | :-----------: | ------------:
+| UNO        | 55         | ?            | 37           | no     | none               | coax jack     | 12
+| Pro Micro  | 11         | ?            | 1.4          | no     | none               | Vcc           | 5
+| Nano       | 41         | 74           | 35           | no     | 12xSMT100, on      | +5V pin*      | 5
+| Nano       | 19         | 24           | 8            | no     | none               | +5V pin*      | 5
+| Nano       | 28         | 64           | 22           | no     | 12xSMT100, on      | Vin pin       | 5
+| Nano       | 13         | 16           | 6            | no     | none               | Vin pin       | 5
+| Nano       | 19         | 74           | 8            | no     | 12xSMT100, switched | +5V pin*     | 5
+| Nano       | 13         | 74           | 6            | no     | 12xSMT100, switched | Vin pin*     | 5
+| Nano, RTC1 | ?          | ~50          | 7.2          | no     | 12xSMT100, switched | Vin pin      | 5
+| Nano, RTC2 | ?          | ~50          | 10.6         | no     | 12xSMT100, switched | Vin pin      | 5
+| Nano, RTC2 LED off | ?  | ~50          | 8.1          | no     | 12xSMT100, switched | Vin pin      | 5
+| Nano  RTC2  | ?         | ~62          | 11.5         | yes    | 12xSMT100, switched | Vin pin      | 5
+| Nano, RTC2 LED off | ?  | ~62          | 10.3         | yes    |12xSMT100, switched | Vin pin      | 5
+| Nano, RTC1 |         ?  | ~62          | 9.7          | yes    |12xSMT100, switched | Vin pin      | 5
+| Nano, RTC1 |         ?  | ~62          | 7.0          | yes, LEDs off    |12xSMT100, switched | Vin pin      | 5
+| Nano LEDs off, RTC1 |?  | ~62          | 4.2          | yes, LEDs off    |12xSMT100, switched | Vin pin      | 5
+| Nano2 LEDs off, RTC2 |? | ~62          | 18.8         | yes, LEDs off    |12xSMT100, switched | Vin pin      | 5
+| Nano2 LEDs, USB off, RTC2 |? | ~62     |  8.8         | yes, LEDs off    |12xSMT100, switched | Vin pin      | 5
 
+² highly fluctuating
 \* strange, but true: the Nano drew more current when powered via +5V pin than via Vin.
 
 ### SDI-12 device not returning any or corrupted data <a name="SDI12_length"> </a> 

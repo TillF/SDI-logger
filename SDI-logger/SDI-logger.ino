@@ -2,7 +2,7 @@
 //Till Francke, 2020
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string F("1.33")
+#define ver_string F("1.34")
 #include "setup_general.h" //adjust your board settings in this file
 #include "setup_sdi.h"     //include this if you want to use SDI-12-devices
 
@@ -109,6 +109,8 @@ void setup() { //this function is run once on power-up
 void read_sensors(File dataFile)
 {
  //String output_string;
+  digitalWrite(messagePin, HIGH); //enable message LED to indicate reading of sensors
+
   int char_counter = read_all_SDI(dataFile); //read SDI and write to file
  if (char_counter==0) //no data from sensor
      error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
@@ -117,6 +119,7 @@ void read_sensors(File dataFile)
   getVoltage(dataFile); //get internal voltage of board, may help detecting brownouts
   //Serial.println("\t"+output_string);
  sensor_power(LOW); //power off the sensors, if enabled
+ digitalWrite(messagePin, LOW); //disable message LED to indicate end of reading of sensors
 
 }
 

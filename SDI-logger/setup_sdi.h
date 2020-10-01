@@ -52,9 +52,9 @@ String setup_sdi(){
   Serial.print(F("Init SDI-12 bus..."));
   mySDI12.begin();
   delay(500); // allow things to settle
-
+  
   String result="";
-  char temp_str[4]="aI!\0"; // SDI-12 identification command format  [address]['I'][!]
+  char temp_str[4]="aI!"; // SDI-12 identification command format  [address]['I'][!]
 
   //get IDs of all requested SDI-sensors
   for (byte i=0; i < strlen(sdi_addresses); i++)
