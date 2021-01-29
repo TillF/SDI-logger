@@ -72,7 +72,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 | GND         | GND       | GND       | GND  |     
 | SCL         | A 5       | A 3       | A 5  |
 | SDA         | A 4       | A 2       | A 4  |
-| SQW         | D 2       | D 7       | ?    |
+| SQW         | D 2       | D 7       | D 2  |
 
  (SQW optional, required only when using sleep mode)
 
