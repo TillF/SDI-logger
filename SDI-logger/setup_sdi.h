@@ -153,26 +153,50 @@ int read_sdi(char i, File dataFile){
   mySDI12.clearBuffer();
 
   //result= "zxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy"; //for testing
+
+dataOption = result.length(); //store length of obtained result
+
 #if WRITE_NA==1 
-  if (result =="") result="NA"; //in case of no data from sensor, write "NA"
+  if (dataOption ==0) result="NA"; //in case of no data from sensor, write "NA"
 #endif
   
   temp_str = "\tSDI"+(String)i+"\t"; //add SDI-12-adress and field separators
  
-  Serial.print(temp_str);   //write results to console
-  Serial.print(result);   //write results to console
+  Serial.print(temp_str);   //write "header" to file
+  Serial.print(result);   //write results to file
   dataFile.print(temp_str); // write to file
   dataFile.print(result); // write to file
-  return(result.length()); //return length of string for later checking
+  return(dataOption); //return length of string for later checking
 }
 
 int read_all_SDI(File dataFile) //read all SDI specified in list
 {
   int char_counter;
+  int res_length; //length of returned result string
+  bool NA_read=0; //mark if any NAs have been read
   for (byte i=0; i < strlen(sdi_addresses); i++)
   {
-    char_counter += read_sdi(sdi_addresses[i], dataFile);     // read SDI sensor and write to file, count number of characters written
+    res_length = read_sdi(sdi_addresses[i], dataFile);     // read SDI sensor and write to file, count number of characters written
+    char_counter += res_length;
+    if (res_length == 0) NA_read=1; //mark that NAs have been read
   }   
-
+  if (NA_read)
+  {
+    awake_time_current=awake_time_current+INCREASE_AWAKE_TIME; //increase awake time
+    awake_time_current=min(10*AWAKE_TIME, awake_time_current); //no more than 10times the original value
+    successful_readings = 0; //number of consequetive successful readings
+  } else
+  {
+    successful_readings++; //number of consequtive successful readings
+    if (successful_readings >= DECREASE_AWAKE_TIME_CYCLES) //decrease awake time after DECREASE_AWAKE_TIME_CYCLES of unsuccessful readings
+    {
+      awake_time_current=awake_time_current-INCREASE_AWAKE_TIME; //decrease awake time
+      awake_time_current=max(AWAKE_TIME, awake_time_current); //at least the original value
+      successful_readings = 0; //number of consequetive successful readings
+    }   
+  }
+  Serial.print("awaketime:"); //rr remove me
+  Serial.println(successful_readings);
+  
  return(char_counter);
 }
