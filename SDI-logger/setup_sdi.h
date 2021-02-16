@@ -187,7 +187,7 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
   if (NA_read)
   {
     awake_time_current = awake_time_current + INCREASE_AWAKE_TIME; //increase awake time
-    awake_time_current = min(10*AWAKE_TIME, awake_time_current); //not more than 10times the original value
+    awake_time_current = min(20*AWAKE_TIME, awake_time_current); //not more than 10times the original value
     successful_readings = 0; //number of consequetive successful readings
   } else
   {
