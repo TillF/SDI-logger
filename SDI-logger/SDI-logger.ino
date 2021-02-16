@@ -220,13 +220,13 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   long time2next;
 
   //wait before sleep
-  Serial.print(F("Time2wait1:"));
-  Serial.println(AWAKE_TIME);
-  wait(AWAKE_TIME);
+  //Serial.print(F("Time2wait1:"));
+  //Serial.println(awake_time_current);
+  //wait(awake_time_current);
   
   //sleep
   timestamp_curr = RTC.now().unixtime();
-  time2next = timestamp_next - timestamp_curr - AWAKE_TIME;  //compute time to spend in sleep mode
+  time2next = timestamp_next - timestamp_curr - awake_time_current;  //compute time to spend in sleep mode
   Serial.print(F("Time2sleep:"));
   Serial.println((String)time2next);
   //delay(time2next*1000); 
@@ -234,13 +234,13 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   
   //wait after sleep
   sensor_power(HIGH); //power on the sensors, if enabled
-  timestamp_curr = RTC.now().unixtime();
+  timestamp_curr = RTC.now().unixtime(); //we check the clock, as we may have woken up by mistake
   //Serial.print(F("Current timestamp:" ));
   //Serial.println(timestamp_curr);
   time2next = (timestamp_next - timestamp_curr);  //compute time to spend in wait mode
   Serial.print(F("Time2wait2:"));
   Serial.println(time2next);
-  wait(time2next);
+  wait(max(awake_time_current, time2next)); //wait at least the required waiting time
   
 }
 

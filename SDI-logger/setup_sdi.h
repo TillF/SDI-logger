@@ -10,7 +10,8 @@
   
 #define POWER_PIN 4       // The sensor power pin (or -1, if not switching power)
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
-const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!)
+//const char sdi_addresses[] = { '1'}; 
+const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
 
 #define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
 
@@ -40,8 +41,8 @@ String readSDIBuffer(){
 void sensor_power(byte onoff) //power the SDI devices
 {
  if(POWER_PIN > 0){
-    Serial.print(F("sensor power: "));
-    Serial.println(onoff);
+    //Serial.print(F("sensor power: "));
+    //Serial.println(onoff);
     pinMode(POWER_PIN, OUTPUT);
     digitalWrite(POWER_PIN, onoff);
     delay(200);
@@ -64,7 +65,7 @@ String setup_sdi(){
     delay(100);
     //Serial.println(temp_str);
     
-    result += readSDIBuffer()+";";
+    result += readSDIBuffer()+"\t"; 
     //Serial.println("found sensors:"+result); 
     mySDI12.clearBuffer();    
   }
@@ -154,10 +155,13 @@ int read_sdi(char i, File dataFile){
 
   //result= "zxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy"; //for testing
 
+//result = ""; //rr test if increasing wating time is working correctly
+//result = "test"; //rr test if increasing wating time is working correctly
+
 dataOption = result.length(); //store length of obtained result
 
 #if WRITE_NA==1 
-  if (dataOption ==0) result="NA"; //in case of no data from sensor, write "NA"
+  if (dataOption == 0) result="NA"; //in case of no data from sensor, write "NA"
 #endif
   
   temp_str = "\tSDI"+(String)i+"\t"; //add SDI-12-adress and field separators
@@ -182,12 +186,12 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
   }   
   if (NA_read)
   {
-    awake_time_current=awake_time_current+INCREASE_AWAKE_TIME; //increase awake time
-    awake_time_current=min(10*AWAKE_TIME, awake_time_current); //no more than 10times the original value
+    awake_time_current = awake_time_current + INCREASE_AWAKE_TIME; //increase awake time
+    awake_time_current = min(10*AWAKE_TIME, awake_time_current); //not more than 10times the original value
     successful_readings = 0; //number of consequetive successful readings
   } else
   {
-    successful_readings++; //number of consequtive successful readings
+    successful_readings++; //number of consequetive successful readings
     if (successful_readings >= DECREASE_AWAKE_TIME_CYCLES) //decrease awake time after DECREASE_AWAKE_TIME_CYCLES of unsuccessful readings
     {
       awake_time_current=awake_time_current-INCREASE_AWAKE_TIME; //decrease awake time
@@ -195,7 +199,12 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
       successful_readings = 0; //number of consequetive successful readings
     }   
   }
-  Serial.print("awaketime:"); //rr remove me
+  String temp_str = "\tawaketime"+(String)awake_time_current+"\tsucc_readings"+(String)successful_readings; //rr remove me, for debugging only
+  dataFile.print(temp_str); // write to file
+  
+  Serial.print(" awaketime:"); //rr remove me
+  Serial.print(awake_time_current);
+  Serial.print(" succ reads:"); //rr remove me
   Serial.println(successful_readings);
   
  return(char_counter);
