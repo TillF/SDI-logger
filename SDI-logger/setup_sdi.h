@@ -77,7 +77,7 @@ String setup_sdi(){
 int count_values(String sdi_string) //return number of values in String by counting separating Tabs
 {
   byte tab_counter=0;
-  for (int i=0; i< sdi_string.length(); i++)
+  for (unsigned int i=0; i < sdi_string.length(); i++)
     if (sdi_string[i]=='\t') tab_counter++;
   return(tab_counter);
 }
@@ -143,7 +143,7 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
     temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
     mySDI12.sendCommand(temp_str);
   //Serial.println(F("request data "));
-    while(!mySDI12.available()>1); // wait for acknowlegement
+    while(!mySDI12.available()); // wait for acknowlegement
     delay(300); // let the data transfer ii: reduce?
     result += readSDIBuffer();
     //Serial.println("data:"+(String)dataOption+":"+(String)result);
@@ -183,7 +183,6 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
 {
   int char_counter=0;
   int res_length; //length of returned result string
-  bool NA_read=0; //mark if any NAs have been read
   byte reading_attempts = 0; //number of consequetive unsuccessful readings from a device
   
   for (byte i=0; i < strlen(sdi_addresses); i++)
@@ -200,7 +199,7 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
     }
     
     char_counter += res_length;
-    if (res_length == 0) NA_read=1; //mark that NAs have been read
+    
     //reading_attempts=0; //reset counter for the next sensor
   }   
   String temp_str = "\reading_attempts"+(String)reading_attempts; //rr remove me, for debugging only
