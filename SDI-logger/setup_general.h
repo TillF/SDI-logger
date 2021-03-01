@@ -5,10 +5,14 @@
 //time settings
 #define INTERVAL 60*10 //interval between measurements [sec]. Must result in an integer number of intervals per day.
 #define AWAKE_TIME 3 //minimum time for being awake before actual measurement [sec].
-byte awake_time_current=3*AWAKE_TIME; //current awake time
-#define INCREASE_AWAKE_TIME 1 //if sensor readings return NA, dynamically increase AWAKE_TIME by this [s], until maximum of 20*AWAKE_TIME
-#define DECREASE_AWAKE_TIME_CYCLES 2 //decrease awake time after DECREASE_AWAKE_TIME_CYCLES of successful readings
-byte successful_readings = 0; //number of consequetive successful readings after reduction of waiting time
+
+//byte awake_time_current=3*AWAKE_TIME; //current awake time
+// #define INCREASE_AWAKE_TIME 1 //if sensor readings return NA, dynamically increase AWAKE_TIME by this [s], until maximum of 20*AWAKE_TIME
+// #define DECREASE_AWAKE_TIME_CYCLES 2 //decrease awake time after DECREASE_AWAKE_TIME_CYCLES of successful readings
+// byte successful_readings = 0; //number of consequetive successful readings after reduction of waiting time
+// 
+#define MAX_READING_ATTEMPTS 3 //maximum number of attempts to read from the sensors. After each failure, the programm waits AWAKE_TIME and retries
+
 //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 
 #define HOUR_START 0   
