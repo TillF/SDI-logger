@@ -3,7 +3,7 @@
 #define SERIAL_BAUD 9600  // The baud rate for the output serial port (only relevant when connected to computer)
 
 //time settings
-#define INTERVAL 60*10 //interval between measurements [sec]. Must result in an integer number of intervals per day.
+#define INTERVAL 1200 //interval between measurements [sec]. Must result in an integer number of intervals per day.
 #define AWAKE_TIME 3 //minimum time for being awake before actual measurement [sec].
 
 //byte awake_time_current=3*AWAKE_TIME; //current awake time

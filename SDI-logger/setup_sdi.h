@@ -143,7 +143,7 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
     temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
     mySDI12.sendCommand(temp_str);
   //Serial.println(F("request data "));
-    while(!mySDI12.available()); // wait for acknowlegement
+    while(!mySDI12.available()>1); // wait for acknowlegement
     delay(300); // let the data transfer ii: reduce?
     result += readSDIBuffer();
     //Serial.println("data:"+(String)dataOption+":"+(String)result);
@@ -183,30 +183,31 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
 {
   int char_counter=0;
   int res_length; //length of returned result string
-  byte reading_attempts = 0; //number of consequetive unsuccessful readings from a device
+  byte failed_reading_attempts = 0; //number of consequetive unsuccessful readings from a device
   
   for (byte i=0; i < strlen(sdi_addresses); i++)
   {
-    res_length = read_sdi(sdi_addresses[i], dataFile, reading_attempts >= MAX_READING_ATTEMPTS);     // read SDI sensor and write to file, count number of characters written
-    reading_attempts++;
-
-    if ((res_length == 0) && (reading_attempts < MAX_READING_ATTEMPTS)) //no data from sensor AND maximum number of attempts to read from a sensor reached
+    //Serial.println("sens:"+(String)i);
+    res_length = read_sdi(sdi_addresses[i], dataFile, failed_reading_attempts >= MAX_READING_ATTEMPTS);     // read SDI sensor and write to file, count number of characters written
+ 
+    if ((res_length == 0) && (failed_reading_attempts < MAX_READING_ATTEMPTS)) //no data from sensor AND maximum number of attempts to read from a sensor reached
     {
+      failed_reading_attempts++;
       i--; // stay at the same sensor
-      blink_led(4, ""); //indicate "no data" via message LED
-      wait(AWAKE_TIME - (round(4*2*300/1000))); //wait remaining time (after substracting blinking time)
+      blink_led(4, "NA-read"); //indicate "no data" via message LED
+      wait(max(0, AWAKE_TIME - (round(4*2*300/1000)))); //wait remaining time (after substracting blinking time)
       continue; //re-do this cycle
-    }
+    } 
     
     char_counter += res_length;
     
     //reading_attempts=0; //reset counter for the next sensor
   }   
-  String temp_str = "\reading_attempts"+(String)reading_attempts; //rr remove me, for debugging only
+  String temp_str = "failed_reading_attempts"+(String)failed_reading_attempts; //rr remove me, for debugging only
   dataFile.print(temp_str); // write to file
   
-  Serial.print(" unsucc reads:"); //rr remove me
-  Serial.println(temp_str); //rr remove me
+  //Serial.print(" unsucc reads:"); //rr remove me
+  //Serial.println(temp_str); //rr remove me
   
  return(char_counter);
 }
