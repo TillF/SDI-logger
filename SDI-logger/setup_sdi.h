@@ -136,20 +136,26 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
   // iterate through all D-options until the expected number of values have been obtained
   String result="";
 
-  uint8_t dataOption=0; //number of "D-channel" to access/iterate
-  while(dataOption < 10)
+  uint8_t dataOption;  //number of "D-channel" to access/iterate
+  for(dataOption=0; dataOption < 10; dataOption++)
   {
     temp_str = (String)i;
     temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
     mySDI12.sendCommand(temp_str);
   //Serial.println(F("request data "));
-    while(!mySDI12.available()>1); // wait for acknowlegement
+    while(!mySDI12.available()>1); // wait for acknowledgement
     delay(300); // let the data transfer ii: reduce?
-    result += readSDIBuffer();
+    temp_str = readSDIBuffer(); 
+    
+    //fix problem with SMT-100 returns, that miss a separator when temperature is negative
+    for (timerStart=temp_str.length()-2; timerStart > 0; timerStart--) 
+     if (temp_str[timerStart]!='\t' && temp_str[timerStart+1]=='-')
+      temp_str = temp_str.substring(0,timerStart+1)+"\t"+temp_str.substring(timerStart+1, temp_str.length());
+   
+    result += temp_str;
     //Serial.println("data:"+(String)dataOption+":"+(String)result);
     //Serial.println("count:"+(String)count_values(result));
     if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
-    dataOption++; //read the next "D-channel" during the next loop
   }
   mySDI12.clearBuffer();
 
@@ -158,7 +164,8 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
 //result = ""; //rr test if increasing wating time is working correctly
 //result = "test"; //rr test if increasing wating time is working correctly
 
-if (result.substring(0,1)=
+if (result.substring(0,3)=="\t0\t") //SMT-100 sometimes yields "0" reading. Treat this as NA.
+  result="";
 
 dataOption = result.length(); //store length of obtained result
 
@@ -174,8 +181,8 @@ if (dataOption == 0) //no data from sensor
   
   temp_str = "\tSDI"+(String)i; //add SDI-12-adress and field separators
  
-  Serial.print(temp_str);   //write "header" to file
-  Serial.print(result);   //write results to file
+  //Serial.print(temp_str);   //write "header" to file
+  //Serial.print(result);   //write results to file
   dataFile.print(temp_str); // write to file
   dataFile.print(result); // write to file
   return(dataOption); //return length of string for later checking
@@ -205,11 +212,8 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
     
     //reading_attempts=0; //reset counter for the next sensor
   }   
-  String temp_str = "failed_reading_attempts"+(String)failed_reading_attempts; //rr remove me, for debugging only
+  String temp_str = "\t"+(String)failed_reading_attempts; //rr remove me, for debugging only
   dataFile.print(temp_str); // write to file
-  
-  //Serial.print(" unsucc reads:"); //rr remove me
-  //Serial.println(temp_str); //rr remove me
   
  return(char_counter);
 }
