@@ -204,6 +204,7 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
       failed_reading_attempts++;
       i--; // stay at the same sensor
       blink_led(4, "NA-read"); //indicate "no data" via message LED
+      digitalWrite(messagePin, HIGH); //indication for "reading"
       wait(max(0, AWAKE_TIME - (round(4*2*300/1000)))); //wait remaining time (after substracting blinking time)
       continue; //re-do this cycle
     } 
