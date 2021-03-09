@@ -158,6 +158,8 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
 //result = ""; //rr test if increasing wating time is working correctly
 //result = "test"; //rr test if increasing wating time is working correctly
 
+if (result.substring(0,1)=
+
 dataOption = result.length(); //store length of obtained result
 
 if (dataOption == 0) //no data from sensor
@@ -166,11 +168,11 @@ if (dataOption == 0) //no data from sensor
     return(0);
     
   #if WRITE_NA==1 
-    result="NA"; //in case of no data from sensor, write "NA"
+    result="\tNA"; //in case of no data from sensor, write "NA"
   #endif
 }
   
-  temp_str = "\tSDI"+(String)i+"\t"; //add SDI-12-adress and field separators
+  temp_str = "\tSDI"+(String)i; //add SDI-12-adress and field separators
  
   Serial.print(temp_str);   //write "header" to file
   Serial.print(result);   //write results to file
