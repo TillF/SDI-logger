@@ -2,28 +2,11 @@
 //Till Francke, 2020
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string "1.30"
+#define ver_string F("1.34")
 #include "setup_general.h" //adjust your board settings in this file
 #include "setup_sdi.h"     //include this if you want to use SDI-12-devices
 
 // Begin code section - no user changes required below (sic!)
-
-//for SD-card
-#include <SPI.h>
-#include <SD.h>
-
-// clock
-#include <DS3231.h> // https://github.com/NorthernWidget/DS3231; delete any existing "DS3231"-library to avoid conflicts!!
-#include <Wire.h>
-RTClib RTC;
-DateTime now;
-
-//sleep mode
-#include <LowPower.h> // https://github.com/rocketscream/Low-Power V1.8
-
-//for reading logger ID from EEPROM
-#include <EEPROM.h>
-
 //String logfile_name="";
 char logfile_name[12]="";
 
@@ -109,6 +92,7 @@ void setup() { //this function is run once on power-up
     digitalWrite(messagePin, LOW);
   }  
 
+  Serial.println(ver_string);
   if (wakeUpPin !=0)  //wakeUpPin pin, if present
   {
     pinMode(wakeUpPin, INPUT_PULLUP);   //the RTC then will draw this pin from high to low to denote an event
@@ -122,20 +106,24 @@ void setup() { //this function is run once on power-up
 }
 
 
-String read_sensors()
+void read_sensors(File dataFile)
 {
- String output_string;
- output_string += read_all_SDI();
- if (output_string=="") //no data from sensor
+ //String output_string;
+  digitalWrite(messagePin, HIGH); //enable message LED to indicate reading of sensors
+
+  int char_counter = read_all_SDI(dataFile); //read SDI and write to file
+ if (char_counter==0) //no data from sensor
      error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
   
  // output_string +=  String(F("\t"))+(String)Clock.getTemp(); //read temperature of RTC: sadly, only works with rinkydinks library, which in turn does not support alarms 
-  output_string +=  String(F("\t"))+(String)getVoltage(); //get internal voltage of board, may help detecting brownouts
-  //Serial.println("V"+output_string);
- return(output_string);
+  getVoltage(dataFile); //get internal voltage of board, may help detecting brownouts
+  //Serial.println("\t"+output_string);
+ sensor_power(LOW); //power off the sensors, if enabled
+ digitalWrite(messagePin, LOW); //disable message LED to indicate end of reading of sensors
+
 }
 
- int getVoltage(void) // Returns actual value of Vcc (x 100), i.e. internal voltage to processor (http://forum.arduino.cc/index.php?topic=88935.0)
+ void getVoltage(File dataFile) // Returns actual value of Vcc (x 100), i.e. internal voltage to processor (http://forum.arduino.cc/index.php?topic=88935.0)
     {
        
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -159,9 +147,11 @@ String read_sensors()
         // Wait for it to complete
      while( ( (ADCSRA & (1<<ADSC)) != 0 ) );
         // Scale the value
-     int results = (((InternalReferenceVoltage * 1023L) / ADC) + 5L) / 10L; // calculates for straight line value
-     return results;
-
+     int results2 = (((InternalReferenceVoltage * 1023L) / ADC) + 5L) / 10L; // calculates for straight line value
+     
+     String result = "\t"+(String)results2; //add field separator
+     Serial.print(result); //write results to console
+     dataFile.print(result); // write to file
     }
 
 void blink_led(int times, String msg) //blink message LED, if exists
@@ -230,37 +220,38 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   long time2next;
 
   //wait before sleep
-  Serial.print(F("Time2wait1:"));
-  Serial.println(AWAKE_TIME);
-  wait(AWAKE_TIME);
+  //Serial.print(F("Time2wait1:"));
+  //Serial.println(awake_time_current);
+  //wait(awake_time_current);
   
   //sleep
   timestamp_curr = RTC.now().unixtime();
-  time2next = timestamp_next - timestamp_curr - AWAKE_TIME;  //compute time to spend in sleep mode
+  time2next = timestamp_next - timestamp_curr - awake_time_current;  //compute time to spend in sleep mode
   Serial.print(F("Time2sleep:"));
   Serial.println((String)time2next);
   //delay(time2next*1000); 
   sleep(time2next);
   
   //wait after sleep
-  timestamp_curr = RTC.now().unixtime();
+  sensor_power(HIGH); //power on the sensors, if enabled
+  timestamp_curr = RTC.now().unixtime(); //we check the clock, as we may have woken up by mistake
   //Serial.print(F("Current timestamp:" ));
   //Serial.println(timestamp_curr);
   time2next = (timestamp_next - timestamp_curr);  //compute time to spend in wait mode
   Serial.print(F("Time2wait2:"));
   Serial.println(time2next);
-  wait(time2next);
+  wait(max(awake_time_current, time2next)); //wait at least the required waiting time
   
 }
 
 void wait(long interval) //wait for the requested number of secs while still showing output/LED-activity at certain times
 {
-  const int blink_interval = 2000; //blink LED every nn msecs. Should be a multiple of "interval"
+  const int blink_interval = 1000; //blink LED every nn msecs. Should be a multiple of "interval"
   int led_state=HIGH;
   
   for(long i=interval*1000; i >= 0; i -= blink_interval)
   {
-    Serial.print(F("reading in "));
+    Serial.print(F("wait for "));
     Serial.println(String(i/1000) +" s"); 
     if (messagePin !=0)
     {
@@ -273,7 +264,8 @@ void wait(long interval) //wait for the requested number of secs while still sho
 
 void sleep(long time2sleep)
 {
-  byte t=LOW; //rr
+  //byte t=LOW; //rr
+  digitalWrite(messagePin, LOW); //switch off light while sleeping
   if (time2sleep < 1) return; //no short naps!
   DS3231 Clock; 
 
@@ -348,37 +340,27 @@ void wakeUp() {
 }
 
 void loop() { //this function is called repeatedly as long as the arduino is running
-  //Serial.println("6");Serial.flush(); 
- 
-  char DateAndTimeString[22]; //19 digits plus the null char
   
-  // make a string for assembling the data to log:
-  String output_string = "";
-  
-// assemble timestamp 
-
-  now = RTC.now();
- //Serial.println("7");Serial.flush(); 
- 
- sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
-  output_string = (String)DateAndTimeString;
- 
-  output_string += read_sensors(); //measure and read data from sensor 
-  
-  //Serial.print(F("string to log:"));Serial.println((String)output_string); 
- 
   setup_sdcard(3); //re-initialize the SD-card in case it has been removed
   File dataFile = SD.open(logfile_name, FILE_WRITE);
-
  
   // if the file is available, write to it:
   if (dataFile) 
   {
-    dataFile.println(output_string);
-    dataFile.close();
-    // print to the serial port too:
-    Serial.print(F("logged:"));
-    Serial.println(output_string);
+    char DateAndTimeString[22]; //19 digits plus the null char
+    // assemble timestamp 
+    now = RTC.now();
+   //Serial.println("7");Serial.flush(); 
+
+   sprintf(DateAndTimeString, "%4d-%02d-%02d %02d:%02d:%02d", now.year(), now.month(),now.day(),now.hour(),now.minute(),now.second());
+  
+   Serial.print(F("logged:"));
+   dataFile.print(DateAndTimeString); //write to file
+   Serial.print(DateAndTimeString);
+   
+   read_sensors(dataFile); //measure and read data from sensor 
+   dataFile.println(); //next line in file
+   dataFile.close();
   }
   // if the file isn't open, pop up an error:
   else {
