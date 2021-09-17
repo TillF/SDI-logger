@@ -11,7 +11,8 @@
 #define POWER_PIN 4       // The sensor power pin (or -1, if not switching power)
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 //const char sdi_addresses[] = { '1'}; 
-const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
+const char sdi_addresses[] = "1"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
+const char channels_measurement[] = "02"; //list of channels to query in the measurement (with "XM<channel>"!")
 
 #define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
 
@@ -86,73 +87,76 @@ int read_sdi(char i, File dataFile){
    //Serial.print(F("reading from")+(String)i);
 
   String temp_str = "";  //generate command
-  temp_str += i;
-  temp_str += "M!"; // SDI-12 measurement command format  [address]['M'][!]
 
-  mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
-  delay(30);
+  String result="";
+  uint8_t dataOption=0; //number of "D-channel" to access/iterate
+
+  for (byte j=0; j < strlen(channels_measurement); j++)
+  {
+    temp_str += (String)i + "M"+(String)channels_measurement[j]+"!"; // SDI-12 command to measure [address][M][channel][!]
+    
+    mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
+    delay(30);
   //Serial.println(temp_str); //rr
   
-  // wait for acknowledgement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
-  temp_str = "";
-  char c;
-  delay(30);
-  while (mySDI12.available())  // build response string
-  {
-    c = mySDI12.read();
-    if ((c != '\n') && (c != '\r'))
+    // wait for acknowledgement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
+    temp_str = "";
+    char c;
+    delay(30);
+    while (mySDI12.available())  // build response string
     {
-      temp_str += c;
-      delay(5);
+      c = mySDI12.read();
+      if ((c != '\n') && (c != '\r'))
+      {
+        temp_str += c;
+        delay(5);
+      }
     }
-  }
-  mySDI12.clearBuffer();
+    mySDI12.clearBuffer();
 
-  //Serial.println(F("response: ")+sdiResponse);
+    //Serial.println(F("response: ")+sdiResponse);
+  
+    // find out how long we have to wait (in seconds).
+    uint8_t wait = 0;
+    wait = temp_str.substring(1,4).toInt();
+    //Serial.print("wait:"+(String)wait); //print required time for measurement [s]
+  
+    // Set up the number of results to expect
+    uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
+    //Serial.println("tstr:"+temp_str); //print number of expected measurement [s]
+    //Serial.println("meas xpected:"+(String)numMeasurements); //print number of expected measurement [s]
+  
+    unsigned long timerStart = millis();
+    while((millis() - timerStart) < (1000 * wait)){
+      if(mySDI12.available())  // sensor can interrupt us to let us know it is done early
+      {
+        mySDI12.clearBuffer();
+        break;
+      }
+    }
+    // Wait for anything else and clear it out
+    delay(30);
+    mySDI12.clearBuffer();
+  //Serial.print(F("waited "));
+  
+    // iterate through all D-options until the expected number of values have been obtained
 
-  // find out how long we have to wait (in seconds).
-  uint8_t wait = 0;
-  wait = temp_str.substring(1,4).toInt();
-  //Serial.print("wait:"+(String)wait); //print required time for measurement [s]
-
-  // Set up the number of results to expect
-  uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
-  //Serial.println("tstr:"+temp_str); //print number of expected measurement [s]
-  //Serial.println("meas xpected:"+(String)numMeasurements); //print number of expected measurement [s]
-
-  unsigned long timerStart = millis();
-  while((millis() - timerStart) < (1000 * wait)){
-    if(mySDI12.available())  // sensor can interrupt us to let us know it is done early
+//    while(dataOption < 10)
     {
-      mySDI12.clearBuffer();
-      break;
+      temp_str = (String)i;
+      temp_str += (String)i + "D"+(String)channels_measurement[j]+"!"; // SDI-12 command to get data [address][D][dataOption][!]
+      mySDI12.sendCommand(temp_str);
+    //Serial.println(F("request data "));
+      while(!mySDI12.available()>1); // wait for acknowlegement
+      delay(300); // let the data transfer ii: reduce?
+      result += readSDIBuffer();
+      //Serial.println("data:"+(String)dataOption+":"+(String)result);
+      //Serial.println("count:"+(String)count_values(result));
+      //if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
+      //dataOption++; //read the next "D-channel" during the next loop
     }
-  }
-  // Wait for anything else and clear it out
-  delay(30);
-  mySDI12.clearBuffer();
-//Serial.print(F("waited "));
-
-  // iterate through all D-options until the expected number of values have been obtained
-  String result="";
-
-  uint8_t dataOption=0; //number of "D-channel" to access/iterate
-  while(dataOption < 10)
-  {
-    temp_str = (String)i;
-    temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
-    mySDI12.sendCommand(temp_str);
-  //Serial.println(F("request data "));
-    while(!mySDI12.available()>1); // wait for acknowlegement
-    delay(300); // let the data transfer ii: reduce?
-    result += readSDIBuffer();
-    //Serial.println("data:"+(String)dataOption+":"+(String)result);
-    //Serial.println("count:"+(String)count_values(result));
-    if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
-    dataOption++; //read the next "D-channel" during the next loop
-  }
-  mySDI12.clearBuffer();
-
+    mySDI12.clearBuffer();
+  } //end loop thru channels_measurement
   //result= "zxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy"; //for testing
 
 //result = ""; //rr test if increasing wating time is working correctly
