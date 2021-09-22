@@ -114,7 +114,7 @@ int read_sdi(char i, File dataFile){
     }
     mySDI12.clearBuffer();
 
-    //Serial.println(F("response: ")+sdiResponse);
+    //Serial.println(F("response: ")+temp_str);
   
     // find out how long we have to wait (in seconds).
     uint8_t wait = 0;
@@ -143,8 +143,7 @@ int read_sdi(char i, File dataFile){
 
 //    while(dataOption < 10)
     {
-      temp_str = (String)i;
-      temp_str += (String)i + "D"+(String)channels_measurement[j]+"!"; // SDI-12 command to get data [address][D][dataOption][!]
+      temp_str = (String)i + "D"+(String)channels_measurement[j]+"!"; // SDI-12 command to get data [address][D][dataOption][!]
       mySDI12.sendCommand(temp_str);
     //Serial.println(F("request data "));
       while(!mySDI12.available()>1); // wait for acknowlegement
