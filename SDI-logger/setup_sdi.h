@@ -78,12 +78,12 @@ String setup_sdi(){
 int count_values(String sdi_string) //return number of values in String by counting separating Tabs
 {
   byte tab_counter=0;
-  for (int i=0; i< sdi_string.length(); i++)
+  for (unsigned int i=0; i < sdi_string.length(); i++)
     if (sdi_string[i]=='\t') tab_counter++;
   return(tab_counter);
 }
 
-int read_sdi(char i, File dataFile){
+int read_sdi(char i, File dataFile, boolean last_attempt){
   #if debug_output 
     Serial.print(F("reading sensor"));  Serial.print((String)i); //rr
   #endif
@@ -144,7 +144,9 @@ int read_sdi(char i, File dataFile){
   #endif
 
   // iterate through all D-options until the expected number of values have been obtained
-  while(dataOption < 10)
+
+  uint8_t dataOption;  //number of "D-channel" to access/iterate
+  for(dataOption=0; dataOption < 10; dataOption++)
   {
     temp_str = (String)i + "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
     mySDI12.sendCommand(temp_str);
@@ -154,28 +156,43 @@ int read_sdi(char i, File dataFile){
 
       while(!mySDI12.available()>1); // wait for acknowledgement
     delay(300); // let the data transfer ii: reduce?
-    result += readSDIBuffer();
+    temp_str = readSDIBuffer(); 
+    
+    //fix problem with SMT-100 returns, that miss a separator when temperature is negative
+    for (timerStart=temp_str.length()-2; timerStart > 0; timerStart--) 
+     if (temp_str[timerStart]!='\t' && temp_str[timerStart+1]=='-')
+      temp_str = temp_str.substring(0,timerStart+1)+"\t"+temp_str.substring(timerStart+1, temp_str.length());
+   
+    result += temp_str;
     #if debug_output 
       Serial.println("data:"+(String)result); //rr
       Serial.println("count:"+(String)count_values(result)); //rr
     #endif
     if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
-    dataOption++; //read the next "D-channel" during the next loop
   }
   mySDI12.clearBuffer();
 
   //result= "zxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy"; //for testing
 
+if (result.substring(0,3)=="\t0\t") //SMT-100 sometimes yields "0" reading. Treat this as NA.
+  result="";
+
 dataOption = result.length(); //store length of obtained result
 
-#if WRITE_NA==1 
-  if (dataOption == 0) result="NA"; //in case of no data from sensor, write "NA"
-#endif
+if (dataOption == 0) //no data from sensor
+{
+  if (!last_attempt)  //if this is the last attempt, write as NA
+    return(0);
+    
+  #if WRITE_NA==1 
+    result="\tNA"; //in case of no data from sensor, write "NA"
+  #endif
+}
   
-  temp_str = "\tSDI"+(String)i+"\t"; //add SDI-12-adress and field separators
+  temp_str = "\tSDI"+(String)i; //add SDI-12-adress and field separators
  
-  Serial.print(temp_str);   //write "header" to file
-  Serial.print(result);   //write results to file
+  //Serial.print(temp_str);   //write "header" to file
+  //Serial.print(result);   //write results to file
   dataFile.print(temp_str); // write to file
   dataFile.print(result); // write to file
   return(dataOption); //return length of string for later checking
@@ -183,31 +200,30 @@ dataOption = result.length(); //store length of obtained result
 
 int read_all_SDI(File dataFile) //read all SDI specified in list
 {
-  int char_counter;
+  int char_counter=0;
   int res_length; //length of returned result string
-  bool NA_read=0; //mark if any NAs have been read
+  byte failed_reading_attempts = 0; //number of consequetive unsuccessful readings from a device
+  
   for (byte i=0; i < strlen(sdi_addresses); i++)
   {
-    res_length = read_sdi(sdi_addresses[i], dataFile);     // read SDI sensor and write to file, count number of characters written
-    char_counter += res_length;
-    if (res_length == 0) NA_read=1; //mark that NAs have been read
-  }   
-  if (NA_read)
-  {
-    awake_time_current = awake_time_current + INCREASE_AWAKE_TIME; //increase awake time
-    awake_time_current = min(20*AWAKE_TIME, awake_time_current); //not more than 10times the original value
-    successful_readings = 0; //number of consequetive successful readings
-  } else
-  {
-    successful_readings++; //number of consequetive successful readings
-    if (successful_readings >= DECREASE_AWAKE_TIME_CYCLES) //decrease awake time after DECREASE_AWAKE_TIME_CYCLES of unsuccessful readings
+    //Serial.println("sens:"+(String)i);
+    res_length = read_sdi(sdi_addresses[i], dataFile, failed_reading_attempts >= MAX_READING_ATTEMPTS);     // read SDI sensor and write to file, count number of characters written
+ 
+    if ((res_length == 0) && (failed_reading_attempts < MAX_READING_ATTEMPTS)) //no data from sensor AND maximum number of attempts to read from a sensor reached
     {
-      awake_time_current=awake_time_current-INCREASE_AWAKE_TIME; //decrease awake time
-      awake_time_current=max(AWAKE_TIME, awake_time_current); //at least the original value
-      successful_readings = 0; //number of consequetive successful readings
-    }   
-  }
-  String temp_str = "\tawaketime"+(String)awake_time_current+"\tsucc_readings"+(String)successful_readings; //rr remove me, for debugging only
+      failed_reading_attempts++;
+      i--; // stay at the same sensor
+      blink_led(4, "NA-read"); //indicate "no data" via message LED
+      digitalWrite(messagePin, HIGH); //indication for "reading"
+      wait(max(0, AWAKE_TIME - (round(4*2*300/1000)))); //wait remaining time (after substracting blinking time)
+      continue; //re-do this cycle
+    } 
+    
+    char_counter += res_length;
+    
+    //reading_attempts=0; //reset counter for the next sensor
+  }   
+  String temp_str = "\t"+(String)failed_reading_attempts; //rr remove me, for debugging only
   dataFile.print(temp_str); // write to file
   
   /*

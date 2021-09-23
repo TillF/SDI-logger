@@ -2,9 +2,10 @@
 //Till Francke, 2021
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string F("1.35")
+#define ver_string F("1.36")
 #define branch F("master")
 #include "setup_general.h" //adjust your board settings in this file
+#include "misc_functions.h" //general functions
 #include "setup_sdi.h"     //include this if you want to use SDI-12-devices
 
 // Begin code section - no user changes required below (sic!)
@@ -30,7 +31,7 @@ void setup_sdcard(byte repeat)
   Serial.flush();
 }
 
-char setup_clock()
+void setup_clock()
 {
   char DateAndTimeString[22]; //19 digits plus the null char
   // Initialize the rtc object
@@ -156,6 +157,7 @@ void read_sensors(File dataFile)
      dataFile.print(result); // write to file
     }
 
+/*
 void blink_led(int times, String msg) //blink message LED, if exists
 {
   Serial.println(msg);
@@ -186,6 +188,7 @@ void error_message(byte error_id, int8_t times) //blink and issue message for <t
     delay(2000);
   }  
 }
+*/
 
 long time_next_reading(long &timestamp_curr_i) //compute unix time of next reading
 {
@@ -228,7 +231,7 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   
   //sleep
   timestamp_curr = RTC.now().unixtime();
-  time2next = timestamp_next - timestamp_curr - awake_time_current;  //compute time to spend in sleep mode
+  time2next = timestamp_next - timestamp_curr - AWAKE_TIME;  //compute time to spend in sleep mode
   Serial.print(F("Time2sleep:"));
   Serial.println((String)time2next);
   //delay(time2next*1000); 
@@ -242,10 +245,11 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   time2next = (timestamp_next - timestamp_curr);  //compute time to spend in wait mode
   Serial.print(F("Time2wait2:"));
   Serial.println(time2next);
-  wait(max(awake_time_current, time2next)); //wait at least the required waiting time
+  wait(max(AWAKE_TIME, time2next)); //wait at least the required waiting time
   
 }
 
+/*
 void wait(long interval) //wait for the requested number of secs while still showing output/LED-activity at certain times
 {
   const int blink_interval = 1000; //blink LED every nn msecs. Should be a multiple of "interval"
@@ -263,6 +267,7 @@ void wait(long interval) //wait for the requested number of secs while still sho
     delay(blink_interval);
   }
 }
+*/
 
 void sleep(long time2sleep)
 {
