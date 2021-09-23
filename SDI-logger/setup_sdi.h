@@ -145,7 +145,6 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
 
   // iterate through all D-options until the expected number of values have been obtained
 
-  uint8_t dataOption;  //number of "D-channel" to access/iterate
   for(dataOption=0; dataOption < 10; dataOption++)
   {
     temp_str = (String)i + "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]

@@ -290,7 +290,7 @@ void sleep(long time2sleep)
  Serial.print(F("cur time:"));
  Serial.println((String)hours+":"+(String)mins+":"+(String)secs);
 
-  long tstart = (long)hours*3600 + (long)mins * 60 + secs; //convert start time as timestamp
+//  long tstart = (long)hours*3600 + (long)mins * 60 + secs; //convert start time as timestamp
   long tend = (long)hours*3600 + (long)mins * 60 + secs + time2sleep; //compute end time as timestamp
 
 //convert timestamp into time (day disregarded)
