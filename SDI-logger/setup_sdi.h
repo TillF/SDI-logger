@@ -1,7 +1,7 @@
 //settings for SDI-12 devices
+// Begin settings -------------------------------------------------
 #define debug_output 1 //enable additional screen output for debugging purposes
 
-// Begin settings -------------------------------------------------
 #if board==uno | board==nano 
   #define DATA_PIN 7         // The pin of the SDI-12 data bus (UNO: 7; Pro Micro: 8)
 #endif
@@ -13,7 +13,7 @@
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 //const char sdi_addresses[] = { '1'}; 
 const char sdi_addresses[] = "1"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
-const char channels_measurement[] = "02"; //list of channels to query in the measurement (with "XM<channel>"!")
+const char channels_measurement[] = "02"; //list of channels to query in the measurement (with "<sdi_address>M<channel>"!")
 
 #define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
 
@@ -129,7 +129,7 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
     //Serial.print("wait:"+(String)wait); //print required time for measurement [s]
   
   // compute the number of results to expect
-    //uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
+    uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
     //Serial.println("meas xpected:"+(String)numMeasurements); //print number of expected measurement [s]
   
     unsigned long timerStart = millis();
@@ -148,10 +148,9 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
   #endif
 
   // iterate through all D-options until the expected number of values have been obtained
-
-//  for(dataOption=0; dataOption < 10; dataOption++)
+    for(dataOption=0; dataOption < 10; dataOption++)
     {
-      temp_str = (String)i + "D"+(String)channels_measurement[j]+"!"; // SDI-12 command to get data [address][D][dataOption][!]
+    temp_str = (String)i + "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
       mySDI12.sendCommand(temp_str);
     #if debug_output 
       Serial.println("request data:"+temp_str); //rr
@@ -171,12 +170,11 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
       Serial.println("data:"+(String)result); //rr
       Serial.println("count:"+(String)count_values(result)); //rr
     #endif
-    //if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
+    if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
     }
-  //for(dataOption=0; dataOption < 10; dataOption++)
     mySDI12.clearBuffer();
   } //end loop thru channels_measurement
-  //result= "zxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy"; //for testing
+
 
 if (result.substring(0,3)=="\t0\t") //SMT-100 sometimes yields "0" reading. Treat this as NA.
   result="";

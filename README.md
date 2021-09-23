@@ -34,8 +34,8 @@ Contents:
 
 
 ## Usage <a name="usage"> </a> 
-- install hardware required (see "Hardware required" and "Wiring")
-- install libraries (see "Software required")
+- install hardware required (see [Hardware required](#hardware) and [Wiring](#wiring))
+- install libraries (see [Software required](#software))
 - verify/set clock using separate script (e.g. ```set_clock.ino```)
 - verify/set logger-id using separate script (e.g. ```set_id.ino```)
 - adjust settings 
@@ -44,14 +44,14 @@ Contents:
 	- ```setup_event.h``` (when using the event logger)
 	- ```setup_imu.h``` (when using IMU)
 - enable/disable required header files in ```SDI-logger.ino```
-- enable/disable reading of required sensors in ```read_sensors()``` in ```SDI-logger.ino```
-- upload and run!	
+- enable/disable reading of required sensors in the function ```void read_sensors(File dataFile)``` in ```SDI-logger.ino```
+- upload to Arduino and run!	
 
 ## Hardware required<a name="hardware"> </a> 
-- tested with Arduino Uno, rev. 3, Pro Micro, Nano (sleep mode not tested)
+- tested with Arduino Uno, rev. 3, Pro Micro, Nano
 - D3231 real time clock, SD-card slot (or both combined in a Shield, e.g. https:snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html [no longer produced] or Keyes Date logging Shield [reconstruction steps below])
 
-for wiring details, see below
+for wiring details, see [Wiring](#wiring)
 
 ## Software required <a name="software"> </a> 
 Please install additional libraries via "Tools" -> "Manage Libraries" or download and extract libraries to c:\Program Files (x86)\Arduino\libraries\
@@ -153,21 +153,8 @@ Appears erratically. Try:
 
 - check if the voltage of the SD-card module is sufficient (it may require 5 instead of 3 V)
 
-<<<<<<< HEAD
-- upload the Arduino sketch with another computer - once, this really fixed the problem for us
+- upload the Arduino sketch with another computer -- once, this really fixed the problem for us
 
-### Power consumption 
-| Arduino    | awake [mA] | reading [mA] | asleep [mA]  | peripherals        | connected via |
-| :--------- | :--:       | :-------:    | :---------:  | :--------:         | ------------: |
-| UNO        | 55         | ?            | 37           | none               | coax jack     |
-| Pro Micro  | 11         | ?            | 1.4          | none               | Vcc           |
-| Nano       | 41         | 74           | 35           | 12xSMT100, on      | +5V pin*      |
-| Nano       | 19         | 24           | 8            | none               | +5V pin*      |
-| Nano       | 28         | 64           | 22           | 12xSMT100, on      | Vin pin       |
-| Nano       | 13         | 16           | 6            | none               | Vin pin       |
-| Nano       | 19         | 74           | 8            | 12xSMT100, switched | +5V pin*     |
-| Nano       | 13         | 74           | 6            | 12xSMT100, switched | Vin pin*     |
-=======
 ### Power consumption
 Different Arduino boards vary greatly in power consumption, even within the same type of Arduino. Furthermore, attached peripherals have an influence, again, varying between manufacturers.
 Generally, the Uno is not the best choice for power saving, but even the Uno can be tweaked to considerably lower consumption with some soldering (disable LEDs and USB-chip, see [these instructions ](https://www.defproc.co.uk/tutorial/how-to-reduce-arduino-uno-power-usage-by-95/)).
@@ -198,15 +185,14 @@ To get some general idea, here are some of our measurements:
 
 ² highly fluctuating
 ³ manufacturer: Himalaya
->>>>>>> remotes/origin/adaptive_warmup
 
 \* strange, but true: the Nano drew more current when powered via +5V pin than via Vin.
 
 ### SDI-12 device not returning any or corrupted data <a name="SDI12_length"> </a> 
-SDI-12-devices which return long data strings (e.g. many values returned in one measurement) may cause memory issues. These can cause corrupted or no data being returned or other unexpected behaviour. As of ver. 1.31, return strings of at least 72 chars per device seem to be ok.
+SDI-12-devices which return long data strings (e.g. many values returned in one measurement) may cause memory issues. These can cause corrupted or no data being returned or other unexpected behaviour. As of ver. 1.31, return strings of at least 72 characters per device seem to be ok.
 
 ### SDI-12 device not returning any or zero data 
-When using power switching (POWER_PIN), the warmup time may be to short. Increase AWAKE_TIME.
+When using power switching (POWER_PIN), the warmup time may be too short. Increase AWAKE_TIME.
 
 ### Logger recording at irregular intervals, irrespective of interval settings 
 We found this behaviour with one particular computer and IDE. When uploading the same scripts from another computer, everything worked correctly. Re-installing the IDE also solved this problem.
@@ -214,7 +200,7 @@ We found this behaviour with one particular computer and IDE. When uploading the
 ## Tweaking shields <a name="tweaking"> </a> 
 ### Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
 
-- aim: replace poor DS1307 RTC with DS3231, use power LED as message LED
+- aim: replace poor DS1307 RTC chip with DS3231; use power LED as message LED
 
 - Disconnect / scratch conductor paths
 	- between "+" of Li-cell and adjacent unneeded RTC-chip (8 legs)
@@ -227,6 +213,6 @@ We found this behaviour with one particular computer and IDE. When uploading the
 		- solder cable to outer battery pin (+) (green)
 		- solder to holes next to power LED
 - solder cable to + of Li-cell (green)
-- solder cable to VCC of RTC and 5V-hole next to 3V3 hole  (green)
+- solder cable to VCC of RTC and 5V-hole next to 3V3 hole (green)
 - solder D2 to third pin of RTC, counting from C1 (blue)
 
