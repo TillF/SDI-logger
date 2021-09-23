@@ -1,4 +1,5 @@
 //settings for SDI-12 devices
+#define debug_output 0 //enable additional screen output for debugging purposes
 
 // Begin settings -------------------------------------------------
 #if board==uno | board==nano 
@@ -83,15 +84,21 @@ int count_values(String sdi_string) //return number of values in String by count
 }
 
 int read_sdi(char i, File dataFile){
-   //Serial.print(F("reading from")+(String)i);
+  #if debug_output 
+    Serial.print(F("reading sensor"));  Serial.print((String)i); //rr
+  #endif
 
   String temp_str = "";  //generate command
-  temp_str += i;
-  temp_str += "M!"; // SDI-12 measurement command format  [address]['M'][!]
+
+  String result="";
+  uint8_t dataOption=0; //number of "D-channel" to access/iterate
+    temp_str = (String)i + "M!"; //+(String)channels_measurement[j]+"!"; // SDI-12 command to measure [address][M][channel][!]
 
   mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
   delay(30);
-  //Serial.println(temp_str); //rr
+  #if debug_output 
+   Serial.println("\nQuery str:"+temp_str); //rr
+  #endif
   
   // wait for acknowledgement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
   temp_str = "";
@@ -108,16 +115,17 @@ int read_sdi(char i, File dataFile){
   }
   mySDI12.clearBuffer();
 
-  //Serial.println(F("response: ")+sdiResponse);
+  #if debug_output 
+    Serial.println("response:"+temp_str); //rr
+  #endif
 
   // find out how long we have to wait (in seconds).
   uint8_t wait = 0;
   wait = temp_str.substring(1,4).toInt();
   //Serial.print("wait:"+(String)wait); //print required time for measurement [s]
 
-  // Set up the number of results to expect
+  // compute the number of results to expect
   uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
-  //Serial.println("tstr:"+temp_str); //print number of expected measurement [s]
   //Serial.println("meas xpected:"+(String)numMeasurements); //print number of expected measurement [s]
 
   unsigned long timerStart = millis();
@@ -131,32 +139,32 @@ int read_sdi(char i, File dataFile){
   // Wait for anything else and clear it out
   delay(30);
   mySDI12.clearBuffer();
-//Serial.print(F("waited "));
+  #if debug_output 
+    Serial.print(F("waited ")); //rr
+  #endif
 
   // iterate through all D-options until the expected number of values have been obtained
-  String result="";
-
-  uint8_t dataOption=0; //number of "D-channel" to access/iterate
   while(dataOption < 10)
   {
-    temp_str = (String)i;
-    temp_str += "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
+    temp_str = (String)i + "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
     mySDI12.sendCommand(temp_str);
-  //Serial.println(F("request data "));
-    while(!mySDI12.available()>1); // wait for acknowlegement
+    #if debug_output 
+      Serial.println("request data:"+temp_str); //rr
+    #endif
+
+      while(!mySDI12.available()>1); // wait for acknowledgement
     delay(300); // let the data transfer ii: reduce?
     result += readSDIBuffer();
-    //Serial.println("data:"+(String)dataOption+":"+(String)result);
-    //Serial.println("count:"+(String)count_values(result));
+    #if debug_output 
+      Serial.println("data:"+(String)result); //rr
+      Serial.println("count:"+(String)count_values(result)); //rr
+    #endif
     if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
     dataOption++; //read the next "D-channel" during the next loop
   }
   mySDI12.clearBuffer();
 
   //result= "zxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy"; //for testing
-
-//result = ""; //rr test if increasing wating time is working correctly
-//result = "test"; //rr test if increasing wating time is working correctly
 
 dataOption = result.length(); //store length of obtained result
 
@@ -202,10 +210,11 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
   String temp_str = "\tawaketime"+(String)awake_time_current+"\tsucc_readings"+(String)successful_readings; //rr remove me, for debugging only
   dataFile.print(temp_str); // write to file
   
+  /*
   Serial.print(" awaketime:"); //rr remove me
   Serial.print(awake_time_current);
   Serial.print(" succ reads:"); //rr remove me
   Serial.println(successful_readings);
-  
+  */
  return(char_counter);
 }

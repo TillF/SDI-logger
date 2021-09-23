@@ -1,8 +1,9 @@
 //Data logger for logging SDI-sensor data to SD-card with RTC-timestamp
-//Till Francke, 2020
+//Till Francke, 2021
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string F("1.34")
+#define ver_string F("1.35")
+#define branch F("master")
 #include "setup_general.h" //adjust your board settings in this file
 #include "setup_sdi.h"     //include this if you want to use SDI-12-devices
 
@@ -76,6 +77,7 @@ void setup_logfile(String headerstr)
      error_message(3, -1); //blink LED 3 times
   dataFile.print("#"); //open first line
   dataFile.print(ver_string); //write SDI script version to top of output file
+  dataFile.print(branch);     //write SDI script branch to top of output file
   dataFile.print(": "+headerstr); //write SDI sensor ID to top of output file
   dataFile.println(""); //add line break to header line
   dataFile.close();
