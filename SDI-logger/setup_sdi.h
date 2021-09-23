@@ -1,5 +1,5 @@
 //settings for SDI-12 devices
-#define debug_output 0 //enable additional screen output for debugging purposes
+#define debug_output 1 //enable additional screen output for debugging purposes
 
 // Begin settings -------------------------------------------------
 #if board==uno | board==nano 
@@ -130,7 +130,6 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
   
   // compute the number of results to expect
     //uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
-    //Serial.println("tstr:"+temp_str); //print number of expected measurement [s]
     //Serial.println("meas xpected:"+(String)numMeasurements); //print number of expected measurement [s]
   
     unsigned long timerStart = millis();
@@ -148,18 +147,31 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
     Serial.print(F("waited ")); //rr
   #endif
 
-//    while(dataOption < 10)
+  // iterate through all D-options until the expected number of values have been obtained
+
+//  for(dataOption=0; dataOption < 10; dataOption++)
     {
       temp_str = (String)i + "D"+(String)channels_measurement[j]+"!"; // SDI-12 command to get data [address][D][dataOption][!]
       mySDI12.sendCommand(temp_str);
-    //Serial.println(F("request data "));
-      while(!mySDI12.available()>1); // wait for acknowlegement
+    #if debug_output 
+      Serial.println("request data:"+temp_str); //rr
+    #endif
+
+      while(!mySDI12.available()>1); // wait for acknowledgement
       delay(300); // let the data transfer ii: reduce?
-      result += readSDIBuffer();
-      //Serial.println("data:"+(String)dataOption+":"+(String)result);
-      //Serial.println("count:"+(String)count_values(result));
-      //if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
-      //dataOption++; //read the next "D-channel" during the next loop
+   temp_str = readSDIBuffer(); 
+    
+    //fix problem with SMT-100 returns, that miss a separator when temperature is negative
+    for (timerStart=temp_str.length()-2; timerStart > 0; timerStart--) 
+     if (temp_str[timerStart]!='\t' && temp_str[timerStart+1]=='-')
+      temp_str = temp_str.substring(0,timerStart+1)+"\t"+temp_str.substring(timerStart+1, temp_str.length());
+   
+    result += temp_str;
+    #if debug_output 
+      Serial.println("data:"+(String)result); //rr
+      Serial.println("count:"+(String)count_values(result)); //rr
+    #endif
+    //if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
     }
   //for(dataOption=0; dataOption < 10; dataOption++)
     mySDI12.clearBuffer();

@@ -3,7 +3,7 @@
 
 //see instructions at https://github.com/TillF/SDI-logger
 #define ver_string F("1.36")
-#define branch F("master")
+#define branch F("CRNS_BF3")
 #include "setup_general.h" //adjust your board settings in this file
 #include "misc_functions.h" //general functions
 #include "setup_sdi.h"     //include this if you want to use SDI-12-devices
