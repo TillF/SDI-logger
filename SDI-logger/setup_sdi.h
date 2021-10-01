@@ -76,7 +76,7 @@ String setup_sdi(){
 }
 
 
-int count_values(String sdi_string) //return number of values in String by counting separating Tabs
+byte count_values(String sdi_string) //return number of values in String by counting separating Tabs
 {
   byte tab_counter=0;
   for (unsigned int i=0; i < sdi_string.length(); i++)
@@ -92,11 +92,11 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
   String temp_str = "";  //generate command
 
   String result="";
-  uint8_t dataOption=0; //number of "D-channel" to access/iterate
+  byte dataOption=0; //number of "D-channel" to access/iterate
 
   for (byte j=0; j < strlen(channels_measurement); j++)
   {
-    temp_str += (String)i + "M"+(String)channels_measurement[j]+"!"; // SDI-12 command to measure [address][M][channel][!]
+    temp_str = (String)i + "M"+(String)channels_measurement[j]+"!"; // SDI-12 command to measure [address][M][channel][!]
     
     mySDI12.sendCommand(temp_str); //send command via SDI - prevents sleep mode after second iteration 
     delay(30);
@@ -104,7 +104,7 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
    Serial.println("\nQuery str:"+temp_str); //rr
   #endif
   
-    // wait for acknowledgement with format [address][ttt (3 char, seconds)][number of measurments available, 0-9]
+    // wait for acknowledgement with format [address][ttt (3 char, seconds)][number of measurements available, 0-9]
     temp_str = "";
     char c;
     delay(30);
@@ -124,13 +124,16 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
   #endif
   
     // find out how long we have to wait (in seconds).
-    uint8_t wait = 0;
+    byte wait = 0;
     wait = temp_str.substring(1,4).toInt();
     //Serial.print("wait:"+(String)wait); //print required time for measurement [s]
   
   // compute the number of results to expect
-    uint8_t numMeasurements =  temp_str.substring(4,5).toInt();
-    //Serial.println("meas xpected:"+(String)numMeasurements); //print number of expected measurement [s]
+    byte xpectMeasurements =  temp_str.substring(4,5).toInt();
+    xpectMeasurements =  max(xpectMeasurements, 1); //we will try to retrieve at least one measurement
+    #if debug_output 
+      Serial.println("meas xpected:"+(String)xpectMeasurements); //print number of expected measurement 
+    #endif
   
     unsigned long timerStart = millis();
     while((millis() - timerStart) < (1000 * wait)){
@@ -147,8 +150,9 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
     Serial.print(F("waited ")); //rr
   #endif
 
-  // iterate through all D-options until the expected number of values have been obtained
-    for(dataOption=0; dataOption < 10; dataOption++)
+  // iterate through all D-options or until the expected number of values have been obtained
+  byte recvdMeasurements=0; //number of received values
+	for(dataOption=0; (dataOption < 10) & (recvdMeasurements < xpectMeasurements); dataOption++)
     {
     temp_str = (String)i + "D"+(String)dataOption+"!"; // SDI-12 command to get data [address][D][dataOption][!]
       mySDI12.sendCommand(temp_str);
@@ -166,13 +170,16 @@ int read_sdi(char i, File dataFile, boolean last_attempt){
       temp_str = temp_str.substring(0,timerStart+1)+"\t"+temp_str.substring(timerStart+1, temp_str.length());
    
     result += temp_str;
+  	recvdMeasurements += count_values(temp_str); //increase number of received values
+    
     #if debug_output 
-      Serial.println("data:"+(String)result); //rr
-      Serial.println("count:"+(String)count_values(result)); //rr
+      Serial.print("data:"+(String)temp_str); //rr
+      Serial.print("; countnew:"+(String)count_values(temp_str));
+      Serial.println("; counttotal:"+(String)recvdMeasurements); //rr
     #endif
-    if (count_values(result) >= numMeasurements) break; //exit loop when the required number of values have been obtained
     }
     mySDI12.clearBuffer();
+	delay(30);
   } //end loop thru channels_measurement
 
 
