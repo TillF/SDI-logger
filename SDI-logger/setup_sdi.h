@@ -1,5 +1,5 @@
 //settings for SDI-12 devices
-#define debug_output 0 //enable additional screen output for debugging purposes
+#define debug_output 1 //enable additional screen output for debugging purposes
 
 // Begin settings -------------------------------------------------
 #if board==uno | board==nano 
@@ -12,7 +12,7 @@
 #define POWER_PIN 4       // The sensor power pin (or -1, if not switching power)
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 //const char sdi_addresses[] = { '1'}; 
-const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
+const char sdi_addresses[] = "10b2345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
 
 #define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
 
@@ -205,17 +205,22 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
   
   for (byte i=0; i < strlen(sdi_addresses); i++)
   {
-    //Serial.println("sens:"+(String)i);
+    #if debug_output 
+       Serial.println("sens:"+(String)i+" "+(String)failed_reading_attempts+"/"+(String)MAX_READING_ATTEMPTS);
+    #endif
+    
     res_length = read_sdi(sdi_addresses[i], dataFile, failed_reading_attempts >= MAX_READING_ATTEMPTS);     // read SDI sensor and write to file, count number of characters written
  
-    if ((res_length == 0) && (failed_reading_attempts < MAX_READING_ATTEMPTS)) //no data from sensor AND maximum number of attempts to read from a sensor reached
+    if (res_length == 0) //no data from sensor AND maximum number of attempts to read from a sensor reached
     {
       failed_reading_attempts++;
       i--; // stay at the same sensor
       blink_led(4, "NA-read"); //indicate "no data" via message LED
-      digitalWrite(messagePin, HIGH); //indication for "reading"
+      
       wait(max(0, AWAKE_TIME - (round(4*2*300/1000)))); //wait remaining time (after substracting blinking time)
-      continue; //re-do this cycle
+      digitalWrite(messagePin, HIGH); //indication for "reading"
+      if (failed_reading_attempts < MAX_READING_ATTEMPTS)
+       continue; //re-try this sensor
     } 
     
     char_counter += res_length;
