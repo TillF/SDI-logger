@@ -11,7 +11,7 @@
 // #define DECREASE_AWAKE_TIME_CYCLES 2 //decrease awake time after DECREASE_AWAKE_TIME_CYCLES of successful readings
 // byte successful_readings = 0; //number of consequetive successful readings after reduction of waiting time
 // 
-#define MAX_READING_ATTEMPTS 3 //maximum number of attempts to read from the sensors. After each failure, the programm waits AWAKE_TIME and retries
+#define MAX_READING_ATTEMPTS (byte)3 //maximum number of attempts to read from the sensors. After each failure, the programm waits AWAKE_TIME and retries
 
 //start time of reading. All successive readings will be made at multiples of INTERVAL after/before this time
 
