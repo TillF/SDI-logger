@@ -24,7 +24,7 @@ void error_message(byte error_id, int8_t times) //blink and issue message for <t
                      "no data from sensor" //4
                       };
   int8_t i;
-  for(i=0; i <= times; i++)
+  for(i=0; i < times; i++)
   {
     blink_led(error_id, errors[error_id] );
     delay(2000);
