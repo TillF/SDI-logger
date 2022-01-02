@@ -120,15 +120,20 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
   
   The LED  can issue the following codes:
   
-  off: sleep mode
+  off: sleep mode or everything is broken
+
+  on: power-up at initialisation
+
+  slow (1 s) blinking: waiting
   
-  slow (1 s) blinking: wating for sensor reading
+  medium (0.3 s):
+  2 flashes: no SD-card found
   
-  2 short flashes every 2 secs: no SD-card found
+  3 flashes: SD-card write error
   
-  3 short flashes every 2 secs: SD-card write error
-  
-  4 short flashes every 2 secs: no data from sensor
+  4 flashes: no data from sensor
+
+  flicker (0.03 s): reading from sensor
   
 ![Example](doc/wiring_shield.JPG)
 An Arduino Uno equipped with a Snootlab Shield. Pin D2 has been connected to a wire soldered to SQW on the shield. The blue LED of the shield in the lower right (actually a power LED) has been re-configured to serve as the message LED: The left side of the adjacent resistor was soldered off the shield and instead connected to the wire leading to D3. 

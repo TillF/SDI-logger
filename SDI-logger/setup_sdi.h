@@ -12,12 +12,13 @@
 #define POWER_PIN 4       // The sensor power pin (or -1, if not switching power)
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 //const char sdi_addresses[] = { '1'}; 
-const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
+//const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
+const char sdi_addresses[] = "012"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
 
 #define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
 
 // end settings --------------------------------------------------------
-
+//#include "misc_functions.h" //general functions
 #include <SDI12.h> //SDI-12 library
 
 SDI12 mySDI12(DATA_PIN); // Define the SDI-12 bus
@@ -84,6 +85,8 @@ int count_values(String sdi_string) //return number of values in String by count
 }
 
 int read_sdi(char i, File dataFile, boolean last_attempt){
+  blink_led(20, 30); //flicker LED to indicate reading of sensors
+  
   #if debug_output 
     Serial.print(F("read sensor "));  Serial.print((String)i); //rr
   #endif
@@ -215,7 +218,7 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
     {
       failed_reading_attempts++;
       
-      blink_led(4, "NA-read"); //indicate "no data" via message LED
+      error_message(4, 1); //indicate "no data" via message LED
       if (failed_reading_attempts >= MAX_READING_ATTEMPTS)
        continue; //proceed to next sensor
       else

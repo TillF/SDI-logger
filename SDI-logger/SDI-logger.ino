@@ -89,10 +89,10 @@ void setup() { //this function is run once on power-up
   Serial.begin(SERIAL_BAUD);
     //while(!Serial);// wait for serial port to connect. Needed for native USB port only
 
-  if (messagePin !=0)  //initialize message LED, if present
+  if (messagePin !=0)  //initialize message LED to ON during Init, if present
   {
     pinMode(messagePin, OUTPUT);
-    digitalWrite(messagePin, LOW);
+    digitalWrite(messagePin, HIGH);
   }  
 
   Serial.println(ver_string);
@@ -106,14 +106,17 @@ void setup() { //this function is run once on power-up
              setup_sdcard(-1);
   tmp_str2 = setup_sdi(); //setup SDI devices and retrieve their names
              setup_logfile(tmp_str2);
+
+  if (messagePin !=0)  //switch off message LED
+    digitalWrite(messagePin, LOW);
+           
 }
 
 
 void read_sensors(File dataFile)
 {
- //String output_string;
-  digitalWrite(messagePin, HIGH); //enable message LED to indicate reading of sensors
-
+  //digitalWrite(messagePin, HIGH); //enable message LED to indicate reading of sensors
+  
   int char_counter = read_all_SDI(dataFile); //read SDI and write to file
  if (char_counter==0) //no data from sensor
      error_message(4, 5); //blink LED 4 times, repeat 5 times, then keep going
@@ -340,7 +343,7 @@ void loop() { //this function is called repeatedly as long as the arduino is run
   else {
     //Serial.print(F("error opening "));
     //Serial.println(logfile_name);
-    error_message(3, 5); //blink LED 3 times, repeat 30 times
+    error_message(3, 3); //blink LED 3 times, repeat 3 times
   }
     timestamp_next = time_next_reading(timestamp_curr);
 

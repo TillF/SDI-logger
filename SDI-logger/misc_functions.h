@@ -1,11 +1,8 @@
 // misc functions to be used from various routines
-
-void blink_led(int times, String msg) //blink message LED, if exists
+void blink_led(int times, long blink_length) //blink message LED, if exists
 {
-  Serial.println(msg);
   if (messagePin==0) 
     return; //no pin selected
-  const long blink_length = 300; //duration of blinks and pauses
   for (int i=0;i < times; i++) 
   {
     digitalWrite(messagePin, HIGH); 
@@ -17,16 +14,18 @@ void blink_led(int times, String msg) //blink message LED, if exists
 
 void error_message(byte error_id, int8_t times) //blink and issue message for <time> times. For negative values, blink infinitely
 {
+  const long blink_length=300; //duration of blinks and pauses
   String errors[5] = { "", //short flashes every 2 secs
                      "",
                      "no SD-card found",  //2
                      "SD-card write error", //3
-                     "no data from sensor" //4
+                     "NA-read" //4
                       };
+  Serial.println(errors[error_id]);
   int8_t i;
   for(i=0; i < times; i++)
   {
-    blink_led(error_id, errors[error_id] );
+    blink_led(error_id, blink_length);
     delay(2000);
   }  
 }
