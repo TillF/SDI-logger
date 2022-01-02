@@ -13,7 +13,7 @@
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 //const char sdi_addresses[] = { '1'}; 
 //const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
-const char sdi_addresses[] = "012"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
+const char sdi_addresses[] = "01"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
 
 #define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
 
@@ -85,7 +85,7 @@ int count_values(String sdi_string) //return number of values in String by count
 }
 
 int read_sdi(char i, File dataFile, boolean last_attempt){
-  blink_led(20, 30); //flicker LED to indicate reading of sensors
+  blink_led(16, 33); //flicker LED to indicate reading of sensors
   
   #if debug_output 
     Serial.print(F("read sensor "));  Serial.print((String)i); //rr

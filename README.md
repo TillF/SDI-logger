@@ -133,7 +133,9 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
   
   4 flashes: no data from sensor
 
-  flicker (0.03 s): reading from sensor
+  flicker (0.033 s):
+  1 s burst: reading from sensor
+  2 x 0.5 s bursts: going to sleep
   
 ![Example](doc/wiring_shield.JPG)
 An Arduino Uno equipped with a Snootlab Shield. Pin D2 has been connected to a wire soldered to SQW on the shield. The blue LED of the shield in the lower right (actually a power LED) has been re-configured to serve as the message LED: The left side of the adjacent resistor was soldered off the shield and instead connected to the wire leading to D3. 
@@ -159,6 +161,8 @@ Appears erratically. Try:
 - check if the voltage of the SD-card module is sufficient (it may require 5 instead of 3 V)
 
 - upload the Arduino sketch with another computer - once, this really fixed the problem for us
+
+- use different SD card: even without apparent errors, there seem to be difference
 
 ### Power consumption
 Different Arduino boards vary greatly in power consumption, even within the same type of Arduino. Furthermore, attached peripherals have an influence, again, varying between manufacturers.

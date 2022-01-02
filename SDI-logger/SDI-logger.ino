@@ -9,7 +9,6 @@
 #include "setup_sdi.h"     //include this if you want to use SDI-12-devices
 
 // Begin code section - no user changes required below (sic!)
-//String logfile_name="";
 char logfile_name[12]="";
 
 long timestamp_next=0; //timestamp of next reading 
@@ -205,10 +204,14 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   Serial.print(F("Time2sleep:"));
   Serial.println((String)time2next);
   //delay(time2next*1000); 
+  blink_led(8, 33); //flicker LED twice to indicate going to sleep
+  delay(300);
+  blink_led(8, 33); 
+  
   sleep(time2next);
   
   //wait after sleep
-  sensor_power(HIGH); //power on the sensors, if enabled
+  //sensor_power(HIGH); //power on the sensors, if enabled
   timestamp_curr = RTC.now().unixtime(); //we check the clock, as we may have woken up by mistake
   //Serial.print(F("Current timestamp:" ));
   //Serial.println(timestamp_curr);
