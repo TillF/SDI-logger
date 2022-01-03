@@ -1,5 +1,7 @@
 # SDI-logger
-Arduino-based data logger for logging SDI-12 (and other) sensor data to SD-card with RTC-time stamp. [ALog](https://github.com/NorthernWidget/ALog) may be a more advanced alternative you could also check out.
+Arduino-based data logger for logging SDI-12 (and other) sensor data to SD-card with RTC-time stamp.
+
+[ALog](https://github.com/NorthernWidget/ALog) may be a more advanced alternative you could also check out.
 
 Contents:
 
@@ -34,7 +36,7 @@ Contents:
 
 
 ## Usage <a name="usage"> </a> 
-- install hardware required (see "Hardware required" and "Wiring")
+- install hardware (see "Hardware required" and "Wiring")
 - install libraries (see "Software required")
 - verify/set clock using separate script (e.g. ```set_clock.ino```)
 - verify/set logger-id using separate script (e.g. ```set_id.ino```)
@@ -45,16 +47,18 @@ Contents:
 	- ```setup_imu.h``` (when using IMU)
 - enable/disable required header files in ```SDI-logger.ino```
 - enable/disable reading of required sensors in ```read_sensors()``` in ```SDI-logger.ino```
-- upload and run!	
+- upload scripts to Arduino and run!	
 
 ## Hardware required<a name="hardware"> </a> 
-- tested with Arduino Uno, rev. 3, Pro Micro, Nano (sleep mode not tested)
-- D3231 real time clock, SD-card slot (or both combined in a Shield, e.g. https:snootlab.com/lang-en/shields-snootlab/1233-memoire-20-ds3231-fr.html [no longer produced] or Keyes Date logging Shield [reconstruction steps below])
+- Arduino (tested with Arduino Uno-rev. 3, Pro Micro, Nano)
+- D3231 real time clock, SD-card slot (or both combined in a Shield (currently none available) or customize a Shield, e.g. Keyes Date logging Shield [reconstruction steps below])
 
 for wiring details, see below
 
 ## Software required <a name="software"> </a> 
-Please install additional libraries via "Tools" -> "Manage Libraries" or download and extract libraries to c:\Program Files (x86)\Arduino\libraries\
+[Arduino IDE](https://www.arduino.cc/en/software)
+
+Please install additional libraries via "Tools" -> "Manage Libraries" or download and extract libraries to the IDE-installation directory, e.g. "c:\Program Files (x86)\Arduino\libraries\"
 
  SDI: https://github.com/EnviroDIY/Arduino-SDI-12 (tested: 29 Oct 2018)
  
@@ -102,23 +106,26 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 | +Vbat \*    | 5 V  **   | 5 V **    |    
 | SDI-12 data | D 7       | D 8       |    
  
- \* if the external device needs more than 5 V or exceeds the current that can be provided by the Arduino, connect it to external battery instead of the Arduino-pin).
- 
- ** if you want to switch off the power inbetween measurements, use the pin specified as POWER_PIN
- 
  e.g. 
  
  Truebner SMT100: data: green; ground: white; V+: brown
  
  delta_T PR2: data: black; ground: blue; V+: white (needs external 12 V)
  
+ \* if the external device needs more than 5 V or exceeds the current that can be provided by the Arduino, connect it to external battery instead of the Arduino-pin).
+ 
+ ** if you want to switch off the power between measurements, use the pin specified as POWER_PIN
+ 
 
-### message LED (optional)
+### Message LED (optional)
 
  Uno: Connect LED with appropriate resistor to ```message_pin``` (default: pin 3) and ground (internal LED cannot be used).
-  Pro Micro:  use internal LED.
+ 
+ Pro Micro:  use internal LED.
+ 
+ Shield: Connect appropriate pin to LED on shield ()
   
-  The LED  can issue the following codes:
+  The LED can issue the following codes:
   
   off: sleep mode or everything is broken
 
@@ -164,6 +171,15 @@ Appears erratically. Try:
 
 - use different SD card: even without apparent errors, there seem to be difference
 
+### SDI-12 device not returning any or corrupted data <a name="SDI12_length"> </a> 
+SDI-12-devices which return long data strings (e.g. many values returned in one measurement) may cause memory issues. These can cause corrupted or no data being returned or other unexpected behaviour. As of ver. 1.31, return strings of at least 72 chars per device seem to be ok.
+
+### SDI-12 device not returning any or zero data 
+When using power switching (POWER_PIN), the warmup time may be to short. Increase AWAKE_TIME. The Nano also seems to be affected by low temperatures: switching via POWER_PIN showed only a slow rise to the desired output voltage. Again, increasing the waiting time or using a relais may help.
+
+### Logger recording at irregular intervals, irrespective of interval settings 
+We found this behaviour with one particular computer and IDE. When uploading the same scripts from another computer, everything worked correctly. Re-installing the IDE also solved this problem.
+
 ### Power consumption
 Different Arduino boards vary greatly in power consumption, even within the same type of Arduino. Furthermore, attached peripherals have an influence, again, varying between manufacturers.
 Generally, the Uno is not the best choice for power saving, but even the Uno can be tweaked to considerably lower consumption with some soldering (disable LEDs and USB-chip, see [these instructions ](https://www.defproc.co.uk/tutorial/how-to-reduce-arduino-uno-power-usage-by-95/)).
@@ -201,17 +217,11 @@ To get some general idea, here are some of our measurements:
 
 \** manufacturer TRUcomponents, ATMEGA328
 
-### SDI-12 device not returning any or corrupted data <a name="SDI12_length"> </a> 
-SDI-12-devices which return long data strings (e.g. many values returned in one measurement) may cause memory issues. These can cause corrupted or no data being returned or other unexpected behaviour. As of ver. 1.31, return strings of at least 72 chars per device seem to be ok.
-
-### SDI-12 device not returning any or zero data 
-When using power switching (POWER_PIN), the warmup time may be to short. Increase AWAKE_TIME.
-
-### Logger recording at irregular intervals, irrespective of interval settings 
-We found this behaviour with one particular computer and IDE. When uploading the same scripts from another computer, everything worked correctly. Re-installing the IDE also solved this problem.
 
 ## Tweaking shields <a name="tweaking"> </a> 
-### Preparation / alterations to Keyes Date logging Shield for Arduino Uno for Data Logging
+Customizing shields serves to accommodate a better clock chip and to save energy.
+
+### Preparation / alterations to Keyes Date logging Shield for Arduino Uno
 
 - aim: replace poor DS1307 RTC with DS3231, use power LED as message LED
 
@@ -228,4 +238,7 @@ We found this behaviour with one particular computer and IDE. When uploading the
 - solder cable to + of Li-cell (green)
 - solder cable to VCC of RTC and 5V-hole next to 3V3 hole  (green)
 - solder D2 to third pin of RTC, counting from C1 (blue)
+- for even more power savings: [disable USB](https://www.defproc.co.uk/tutorial/how-to-reduce-arduino-uno-power-usage-by-95/)).
 
+### Preparation / alterations to Deek-Robot Data Logging Shield for Arduino
+- ...
