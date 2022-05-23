@@ -212,7 +212,7 @@ int read_all_SDI(File dataFile) //read all SDI specified in list
        Serial.println("attempts "+(String)failed_reading_attempts+"/"+(String)MAX_READING_ATTEMPTS);
     #endif
     
-    res_length = read_sdi(sdi_addresses[i], dataFile, failed_reading_attempts >= MAX_READING_ATTEMPTS);     // read SDI sensor and write to file, count number of characters written
+    res_length = read_sdi(sdi_addresses[i], dataFile, failed_reading_attempts+1 >= MAX_READING_ATTEMPTS);     // read SDI sensor and write to file, count number of characters written
  
     if (res_length == 0) //no data from sensor AND maximum number of attempts to read from a sensor reached
     {
