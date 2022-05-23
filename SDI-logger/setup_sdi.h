@@ -193,10 +193,10 @@ if (dataOption == 0) //no data from sensor
   
   temp_str = "\tSDI"+(String)i; //add SDI-12-adress and field separators
  
-  //Serial.print(temp_str);   //write "header" to file
-  //Serial.print(result);   //write results to file
-  dataFile.print(temp_str); // write to file
-  dataFile.print(result); // write to file
+  Serial.print(temp_str);   //write "header" to console
+  Serial.print(result);   //write data to console
+  dataFile.print(temp_str); // write "header" to file
+  dataFile.print(result); // write data to file
   return(dataOption); //return length of string for later checking
 }
 

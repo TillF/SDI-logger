@@ -2,7 +2,7 @@
 //Till Francke, 2021
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string F("1.37")
+#define ver_string F("1.38")
 #define branch F("master")
 #include "setup_general.h" //adjust your board settings in this file
 #include "misc_functions.h" //general functions
