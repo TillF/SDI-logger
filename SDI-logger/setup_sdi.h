@@ -12,8 +12,8 @@
 #define POWER_PIN 4       // The sensor power pin (or -1, if not switching power)
 //const char sdi_addresses[] = { '0', '1', '3'}; //list of IDs of attached SDI-sensors (single-character IDs only!)
 //const char sdi_addresses[] = { '1'}; 
-//const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
-const char sdi_addresses[] = "01"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
+const char sdi_addresses[] = "012345ABCDEF"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
+//const char sdi_addresses[] = "01"; //list of IDs of attached SDI-sensors (single-character IDs only!) 
 
 #define WRITE_NA 1         // 1: in case of missing data from a sensor, write "NA" instead; 0: write empty string in case of missing data
 

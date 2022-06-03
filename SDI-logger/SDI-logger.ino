@@ -2,7 +2,7 @@
 //Till Francke, 2021
 
 //see instructions at https://github.com/TillF/SDI-logger
-#define ver_string F("1.38")
+#define ver_string F("1.39")
 #define branch F("master")
 #include "setup_general.h" //adjust your board settings in this file
 #include "misc_functions.h" //general functions
@@ -211,7 +211,7 @@ void sleep_and_wait()  //idles away time until next reading by a) sleeping (savi
   sleep(time2next);
   
   //wait after sleep
-  //sensor_power(HIGH); //power on the sensors, if enabled
+  sensor_power(HIGH); //power on the sensors, if enabled
   timestamp_curr = RTC.now().unixtime(); //we check the clock, as we may have woken up by mistake
   //Serial.print(F("Current timestamp:" ));
   //Serial.println(timestamp_curr);
