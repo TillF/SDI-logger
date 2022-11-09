@@ -62,7 +62,7 @@ Please install additional libraries via "Tools" -> "Manage Libraries" or downloa
 
  SDI: https://github.com/EnviroDIY/Arduino-SDI-12 (tested: 29 Oct 2018)
  
- RTC: https://github.com/NorthernWidget/DS3231 (tested: 31 Oct 2018) delete/rename any existing library to avoid conflicts
+ RTC: https://github.com/NorthernWidget/DS3231 (tested: 31 Oct 2018) delete/rename any existing library to avoid conflicts (Version 1.0.2 and 1.0.7 are working, but 1.1.0 does not work!)
  
  sleep mode: https://github.com/rocketscream/Low-Power (tested: V1.81)
 
